@@ -1,0 +1,48 @@
+{
+  "accountsCollection": "accounts",
+  "logsCollection": "logs",
+  "ticketsCollection": "tickets",
+  "doorsCollection": "doors",
+  "timeData": {
+    "seconds": 0,
+    "minutes": 0,
+    "hours": 0,
+    "days": 0,
+    "months": 0
+  },
+
+  "account":{
+    "accountId": "accountId",
+    "firstName": "firstName",
+    "lastName": "lastName",
+    "refId": "refId",
+    "email": "email",
+    "phoneNumber": "phoneNumber",
+    "password": "password",
+    "arrDoor": [],
+    "role": ["user", "admin", "manager"]
+  },
+
+  "door": {
+    "doorId": "doorId",
+    "idAccountCreate": "idAccountCreate",
+    "position": "position"
+  },
+
+  "ticket": {
+    "ticketId": "ticketId",
+    "idDoor": "idDoor",
+    "idAccount": "idAccount",
+    "startTime": "startTime",
+    "endTime": "endTime",
+    "isAccept": false
+  },
+
+  "token": {
+    "tokenId": "tokenId",
+    "key": "key",
+    "value": "value"
+  },
+
+  "logType": ["account", "door", "ticket"]
+}

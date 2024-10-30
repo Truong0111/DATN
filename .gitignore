@@ -128,3 +128,13 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+#Key
+key
+
+#uncommit
+note.txt
+FE
+.idea
+Dockerfile
+docker-compose.yml
