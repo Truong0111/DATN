@@ -5,24 +5,21 @@ module.exports = {
     const doorData = req.body;
     const createSuccess = await doorService.createDoor(doorData);
     if (createSuccess) {
-      res.status(200).send("Create door successful.");
+      res.status(200).send(`Create door at ${doorData.position} successful.`);
     } else {
-      res.status(400).send("Create door failed.");
+      res.status(400).send(`Create door at ${doorData.position} failed.`);
     }
   },
   getDoor: async (req, res) => {
     const idDoor = req.params.idDoor;
-    const deleteSuccess = await doorService.getDoor(idDoor);
-    if (deleteSuccess) {
-      res.status(200).send("Delete door successful.");
+    const doorData = await doorService.getDoor(idDoor);
+    if (doorData) {
+      res.status(200).send(doorData);
     } else {
-      res.status(404).send("Door not found.");
+      res.status(404).send(`Door has id ${idDoor} not found.`);
     }
   },
   updateDoor: async (req, res) => {
-    console.log(req.params);
-    console.log(req.body);
-
     const idDoor = req.params.idDoor;
     const doorDataUpdate = req.body;
     
@@ -31,20 +28,21 @@ module.exports = {
       doorDataUpdate
     );
     if (updateSuccess) {
-      res.status(200).send("Update door successful.");
+      res.status(200).send(`Update door ${idDoor} successful.`);
     } else {
-      res.status(400).send("Update door failed.");
+      res.status(400).send(`Update door ${idDoor} failed.`);
     }
   },
 
   deleteDoor: async (req, res) => {
-    const idAccountDelete = req.body.idAccount;
     const idDoor = req.params.idDoor;
+    const idAccountDelete = req.body.idAccountDelete;
+    
     const deleteSuccess = await doorService.deleteDoor(idAccountDelete, idDoor);
     if (deleteSuccess) {
-      res.status(200).send("Delete door successful.");
+      res.status(200).send(`Delete door ${idDoor} successful.`);
     } else {
-      res.status(400).send("Delete door failed.");
+      res.status(400).send(`Delete door ${idDoor} failed.`);
     }
   },
 };

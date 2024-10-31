@@ -11,13 +11,16 @@ admin.initializeApp({
 });
 
 const fsdb = admin.firestore();
+const rtdb = admin.database();
 
 const accountCollection = fsdb.collection(constantValue.accountsCollection);
 const doorCollection = fsdb.collection(constantValue.doorsCollection);
 const ticketCollection = fsdb.collection(constantValue.ticketsCollection);
-const tokenCollection = fsdb.collection(constantValue.tokensCollection);
+// const tokenCollection = fsdb.collection(constantValue.tokensCollection);
 const logCollection = fsdb.collection(constantValue.logsCollection);
 const entryLogCollection = fsdb.collection(constantValue.entryLogsCollection);
+
+// const tokenRef = rtdb.ref(constantValue.tokensCollection);
 
 // ------------ Account ------------
 
@@ -90,6 +93,8 @@ async function updateAccount(idAccount, accountDataUpdate) {
 
     delete dataToUpdate.idAccount;
 
+    dataToUpdate.password = await util.hashPassword(dataToUpdate.password);
+
     await accountCollection.doc(idAccount).update(dataToUpdate);
 
     console.log(`Account with ID ${idAccount} updated successfully.`);
@@ -133,22 +138,17 @@ const doorService = {
   getDoor,
   deleteDoor,
 };
+const rolesToCheck = ["manager", "admin"];
 
 async function createDoor(doorData) {
   try {
-    const rolesToCheck = ["manager", "admin"];
-    const accountSnapshot = await accountCollection
-      .where("idAccount", "==", doorData.idAccountCreate)
-      .where("role", "array-contains-any", rolesToCheck)
-      .get();
-
-    if (accountSnapshot.empty) {
-      console.log("Can't create door: Account is not a manager or admin.");
+    const idAccount = doorData.idAccountCreate;
+    const isAccountCanCreateDoor = await isCanCreateDoor(idAccount);
+    if (!isAccountCanCreateDoor) {
       return false;
     }
 
     const doorRef = doorCollection.doc();
-
     await doorRef.set({
       idDoor: doorRef.id,
       idAccountCreate: doorData.idAccountCreate,
@@ -156,7 +156,7 @@ async function createDoor(doorData) {
     });
 
     console.log(
-      `Door ${doorData.position} by ${doorData.idAccountCreate} added successfully.`
+      `Door at ${doorData.position} by ${doorData.idAccountCreate} added successfully.`
     );
     return true;
   } catch (error) {
@@ -168,17 +168,13 @@ async function createDoor(doorData) {
 async function updateDoor(idDoor, doorDataUpdate) {
   try {
     const idAccountCreate = doorDataUpdate.idAccountCreate;
-    console.log(idAccountCreate);
-    console.log(doorDataUpdate.idDoor);
-    console.log(doorDataUpdate.position);
-    const doorSnapShot = await doorCollection
-      .where("idAccountCreate", "==", idAccountCreate)
-      .get();
 
-    if (doorSnapShot.empty) {
-      console.log(
-        `Can't update door: Account ${idAccountCreate} not create this door.`
-      );
+    const isAccountCanUpdateDoor = await isCanUpdateOrDeleteDoor(
+      idAccountCreate,
+      idDoor
+    );
+
+    if (!isAccountCanUpdateDoor) {
       return false;
     }
 
@@ -201,8 +197,16 @@ async function getDoor(idDoor) {
   }
 }
 
-async function deleteDoor(idDoor) {
+async function deleteDoor(idAccountDelete, idDoor) {
   try {
+    const isAccountCanDeleteDoor = await isCanUpdateOrDeleteDoor(
+      idAccountDelete,
+      idDoor
+    );
+    if (!isAccountCanDeleteDoor) {
+      return false;
+    }
+
     await doorCollection.doc(idDoor).delete();
     console.log(`Door with ID ${idDoor} deleted successfully.`);
     return true;
@@ -210,6 +214,32 @@ async function deleteDoor(idDoor) {
     console.error("Error delete door: ", error);
     return false;
   }
+}
+
+async function isCanCreateDoor(idAccount) {
+  const accountSnapshot = await accountCollection
+    .where("idAccount", "==", idAccount)
+    .where("role", "array-contains-any", rolesToCheck)
+    .get();
+  if (accountSnapshot.empty) {
+    console.log("Can't create door: Account is not a manager or admin.");
+    return false;
+  }
+  return true;
+}
+
+async function isCanUpdateOrDeleteDoor(idAccount, idDoor) {
+  const doorSnapShot = await doorCollection
+    .where("idDoor", "==", idDoor)
+    .where("idAccountCreate", "==", idAccount)
+    .get();
+  if (doorSnapShot.empty) {
+    console.log(
+      `Can't update or delete door: Account ${idAccount} not create this door.`
+    );
+    return false;
+  }
+  return true;
 }
 
 // ------------------------------
@@ -228,6 +258,11 @@ async function createTicket(ticketData) {
     const ticketRef = ticketCollection.doc();
     const idTicket = ticketRef.id;
 
+    if (!isTicketValid(ticketData.startTime, ticketData.endTime)) {
+      console.log(`End time is before start time.`);
+      return false;
+    }
+
     await ticketRef.set({
       idTicket: idTicket,
       idDoor: ticketData.idDoor,
@@ -236,8 +271,8 @@ async function createTicket(ticketData) {
       endTime: ticketData.endTime,
       isAccept: false,
     });
-
     console.log(`Ticket ${idTicket} added successfully.`);
+    return true;
   } catch (error) {
     console.error("Error create ticket: ", error);
     return false;
@@ -246,6 +281,11 @@ async function createTicket(ticketData) {
 
 async function updateTicket(idTicket, ticketDataUpdate) {
   try {
+    if (!isTicketValid(ticketDataUpdate.startTime, ticketDataUpdate.endTime)) {
+      console.log(`End time is before start time.`);
+      return false;
+    }
+
     const dataToUpdate = { ...ticketDataUpdate };
 
     delete dataToUpdate.idTicket;
@@ -253,6 +293,7 @@ async function updateTicket(idTicket, ticketDataUpdate) {
     delete dataToUpdate.idAccount;
 
     await ticketCollection.doc(idTicket).update(dataToUpdate);
+    return true;
   } catch (error) {
     console.error("Error update ticket: ", error);
     return false;
@@ -273,10 +314,21 @@ async function deleteTicket(idTicket) {
   try {
     await ticketCollection.doc(idTicket).delete();
     console.log(`Ticket with ID ${idTicket} deleted successfully.`);
+    return true;
   } catch (error) {
     console.error("Error delete ticket: ", error);
     return false;
   }
+}
+
+function isTicketValid(startTime, endTime) {
+  const time1 = new Date(startTime).getTime();
+  const time2 = new Date(endTime).getTime();
+
+  if (time1 > time2) {
+    return false;
+  }
+  return true;
 }
 
 // ------------------------------
@@ -289,9 +341,11 @@ const logService = {
   deleteLog,
 };
 
+const typeLog = ["account", "door", "ticket", "token", "entry"];
+
 async function createLog(logData) {
   try {
-    const logRef = entryLogCollection.doc();
+    const logRef = logCollection.doc();
     const idLog = logRef.id;
 
     await logRef.set({
@@ -299,6 +353,8 @@ async function createLog(logData) {
       type: logData.type,
       info: logData.info,
     });
+
+    return true;
   } catch (error) {
     console.error("Error create entry log: ", error);
     return false;
@@ -307,7 +363,7 @@ async function createLog(logData) {
 
 async function getLog(idLog) {
   try {
-    const logSnapshot = await entryLogCollection.doc(idLog).get();
+    const logSnapshot = await logCollection.doc(idLog).get();
     return logSnapshot.data();
   } catch (error) {
     console.error("Error get entry log: ", error);
@@ -317,8 +373,9 @@ async function getLog(idLog) {
 
 async function deleteLog(idLog) {
   try {
-    await entryLogCollection.doc(idLog).delete();
+    await logCollection.doc(idLog).delete();
     console.log(`Entry log with ID ${idLog} deleted successfully.`);
+    return true;
   } catch (error) {
     console.error("Error delete entry log: ", error);
     return false;
@@ -338,14 +395,17 @@ const tokenService = {
 
 async function createToken(tokenData) {
   try {
-    const tokenRef = tokenCollection.doc();
-    const idToken = tokenRef.id;
+    const keyToken = `${tokenData.idDoor}-${tokenData.idAccount}`;
+    const expiredTime = tokenData.expiredTime;
 
+    const tokenRef = rtdb.ref(`${constantValue.tokensCollection}/${keyToken}`);
     await tokenRef.set({
-      idToken: idToken,
-      key: `${tokenData.idDoor}-${tokenData.idAccount}`,
-      value: tokenData.expiredTime,
+      value: expiredTime,
     });
+    console.log(
+      `Token ${keyToken} with expired time ${expiredTime} added successfully.`
+    );
+    return true;
   } catch (error) {
     console.error("Error create token: ", error);
     return false;
@@ -354,22 +414,23 @@ async function createToken(tokenData) {
 
 async function getToken(idToken) {
   try {
-    const tokenSnapshot = await tokenCollection.doc(idToken).get();
-    return tokenSnapshot.data();
+    const tokenRef = rtdb.ref(`${constantValue.tokensCollection}/${idToken}`);
+    const data = await tokenRef.once("value");
+    return data.val();
   } catch (error) {
     console.error("Error get token: ", error);
-    return null;
+    return false;
   }
 }
 
 async function updateToken(idToken, tokenDataUpdate) {
   try {
-    const dataToUpdate = { ...tokenDataUpdate };
-
-    delete dataToUpdate.idToken;
-    delete dataToUpdate.key;
-
-    await tokenCollection.doc(idToken).update(dataToUpdate);
+    const tokenRef = rtdb.ref(`${constantValue.tokensCollection}/${idToken}`);
+    await tokenRef.update({ value: tokenDataUpdate.expiredTime });
+    console.log(
+      `Token with ID ${idToken} updated with expired time: "${tokenDataUpdate.expiredTime}" successfully.`
+    );
+    return true;
   } catch (error) {
     console.error("Error update token: ", error);
     return false;
@@ -378,8 +439,10 @@ async function updateToken(idToken, tokenDataUpdate) {
 
 async function deleteToken(idToken) {
   try {
-    await tokenCollection.doc(idToken).delete();
+    const tokenRef = rtdb.ref(`${constantValue.tokensCollection}/${idToken}`);
+    await tokenRef.remove();
     console.log(`Token with ID ${idToken} deleted successfully.`);
+    return true;
   } catch (error) {
     console.error("Error delete token: ", error);
     return false;

@@ -27,7 +27,7 @@ module.exports = function (authMiddleware, app) {
     .patch(authMiddleware, doorController.updateDoor)
     .delete(authMiddleware, doorController.deleteDoor);
 
-  app.route("/ticket").post(ticketController.createTicket);
+  app.route("/ticket").post(authMiddleware, ticketController.createTicket);
 
   app
     .route("/ticket/:idTicket")
@@ -39,8 +39,8 @@ module.exports = function (authMiddleware, app) {
 
   app
     .route("/token/:idToken")
-    .patch(authMiddleware, tokenController.updateToken)
     .get(authMiddleware, tokenController.getToken)
+    .patch(authMiddleware, tokenController.updateToken)
     .delete(authMiddleware, tokenController.deleteToken);
 
   app.route("/log").post(logController.createLog);

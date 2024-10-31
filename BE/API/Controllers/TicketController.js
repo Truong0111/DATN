@@ -1,13 +1,14 @@
-const accountService = require("../../Firebase/FirebaseService");
+const ticketService = require("../../Firebase/FirebaseService").ticketService;
 
 module.exports = {
   createTicket: async (req, res) => {
     const ticketData = req.body;
+    
     const createSuccess = await ticketService.createTicket(ticketData);
     if (createSuccess) {
-      res.status(200).send("Create successful.");
+      res.status(200).send("Create ticket successful.");
     } else {
-      res.status(400).send("Create failed.");
+      res.status(400).send("Create ticket failed.");
     }
   },
   getTicket: async (req, res) => {
@@ -27,18 +28,18 @@ module.exports = {
       ticketDataUpdate
     );
     if (updateSuccess) {
-      res.status(200).send("Update successful.");
+      res.status(200).send("Update ticket successful.");
     } else {
-      res.status(400).send("Update failed.");
+      res.status(400).send("Update ticket failed.");
     }
   },
   deleteTicket: async (req, res) => {
     const idTicket = req.params.idTicket;
     const deleteSuccess = await ticketService.deleteTicket(idTicket);
     if (deleteSuccess) {
-      res.status(200).send("Delete successful.");
+      res.status(200).send("Delete ticket successful.");
     } else {
-      res.status(400).send("Delete failed.");
+      res.status(400).send("Delete ticket failed.");
     }
   },
 };
