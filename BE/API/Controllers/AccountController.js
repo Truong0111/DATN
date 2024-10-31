@@ -1,12 +1,19 @@
-const accountService = require("../firestoreService");
+const jwt = require("jsonwebtoken");
+require("dotenv").config({ path: "../.env" });
+const accountService = require("../../Firebase/FirebaseService").accountService;
 
 module.exports = {
   loginAccount: async (req, res) => {
     const username = req.query.username;
     const password = req.query.password;
+    
     const loginSuccess = await accountService.loginAccount(username, password);
+
     if (loginSuccess) {
-      res.status(200).send("Login successful.");
+      const jwtToken = jwt.sign({ username }, process.env.JWT_SECRET, {
+        expiresIn: "24h",
+      });
+      res.status(200).json({ message: "Login succesful.", jwtToken });
     } else {
       res.status(401).send("Invalid username or password.");
     }
@@ -15,9 +22,9 @@ module.exports = {
     const accountData = req.body;
     const registerSuccess = await accountService.registerAccount(accountData);
     if (registerSuccess) {
-      res.status(200).send("Register successful.");
+      res.status(200).send("Register account successful.");
     } else {
-      res.status(400).send("Register failed.");
+      res.status(400).send("Register account failed.");
     }
   },
   getAccount: async (req, res) => {
@@ -37,23 +44,22 @@ module.exports = {
       accountDataUpdate
     );
     if (updateSuccess) {
-      res.status(200).send("Update successful.");
+      res.status(200).send("Update account successful.");
     } else {
-      res.status(400).send("Update failed.");
+      res.status(400).send("Update account failed.");
     }
   },
 
   deleteAccount: async (req, res) => {
-    const idAccountDelete = req.params.idAccountDelete;
-    const idAccountDeleteBy = req.params.idAccountDeleteBy;
+    const idAccountDelete = req.params.idAccount;
+
     const deleteSuccess = await accountService.deleteAccount(
       idAccountDelete,
-      idAccountDeleteBy
     );
     if (deleteSuccess) {
-      res.status(200).send("Delete successful.");
+      res.status(200).send("Delete account successful.");
     } else {
-      res.status(400).send("Delete failed.");
+      res.status(400).send("Delete account failed.");
     }
   },
 };

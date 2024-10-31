@@ -1,4 +1,4 @@
-const ticketService = require("../firestoreService");
+const accountService = require("../../Firebase/FirebaseService");
 
 module.exports = {
   createTicket: async (req, res) => {

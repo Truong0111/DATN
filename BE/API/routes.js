@@ -1,49 +1,52 @@
-module.exports = function (app) {
+module.exports = function (authMiddleware, app) {
   let accountController = require("./Controllers/AccountController");
   let doorController = require("./Controllers/DoorController");
   let ticketController = require("./Controllers/TicketController");
   let tokenController = require("./Controllers/TokenController");
   let logController = require("./Controllers/LogController");
 
-  app
-    .route("/account")
-    .get(accountController.loginAccount)
-    .post(accountController.registerAccount);
+  app.route("/helloword").get(async (req, res) => {
+    res.status(200).send("Hello word");
+  });
+
+  app.route("/login").get(accountController.loginAccount);
+
+  app.route("/register").post(accountController.registerAccount);
 
   app
     .route("/account/:idAccount")
-    .get(accountController.getAccount)
-    .patch(accountController.updateAccount)
-    .delete(accountController.deleteAccount);
+    .get(authMiddleware, accountController.getAccount)
+    .patch(authMiddleware, accountController.updateAccount)
+    .delete(authMiddleware, accountController.deleteAccount);
 
-  app.route("/door").post(doorController.createDoor);
+  app.route("/door").post(authMiddleware, doorController.createDoor);
 
   app
     .route("/door/:idDoor")
-    .get(doorController.getDoor)
-    .patch(doorController.updateDoor)
-    .delete(doorController.deleteDoor);
+    .get(authMiddleware, doorController.getDoor)
+    .patch(authMiddleware, doorController.updateDoor)
+    .delete(authMiddleware, doorController.deleteDoor);
 
   app.route("/ticket").post(ticketController.createTicket);
 
   app
     .route("/ticket/:idTicket")
-    .get(ticketController.getTicket)
-    .patch(ticketController.updateTicket)
-    .delete(ticketController.deleteTicket);
+    .get(authMiddleware, ticketController.getTicket)
+    .patch(authMiddleware, ticketController.updateTicket)
+    .delete(authMiddleware, ticketController.deleteTicket);
 
   app.route("/token").post(tokenController.createToken);
 
   app
     .route("/token/:idToken")
-    .patch(tokenController.updateToken)
-    .get(tokenController.getToken)
-    .delete(tokenController.deleteToken);
+    .patch(authMiddleware, tokenController.updateToken)
+    .get(authMiddleware, tokenController.getToken)
+    .delete(authMiddleware, tokenController.deleteToken);
 
   app.route("/log").post(logController.createLog);
 
   app
     .route("/log/:idLog")
-    .get(logController.getLog)
-    .delete(logController.deleteLog);
+    .get(authMiddleware, logController.getLog)
+    .delete(authMiddleware, logController.deleteLog);
 };

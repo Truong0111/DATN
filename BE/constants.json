@@ -1,8 +1,10 @@
 {
   "accountsCollection": "accounts",
-  "logsCollection": "logs",
-  "ticketsCollection": "tickets",
   "doorsCollection": "doors",
+  "ticketsCollection": "tickets",
+  "tokensCollection": "tokens",
+  "logsCollection": "logs",
+  "entryLogsCollection": "entryLogs",
   "timeData": {
     "seconds": 0,
     "minutes": 0,
