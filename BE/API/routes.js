@@ -9,9 +9,11 @@ module.exports = function (authMiddleware, app) {
     res.status(200).send("Hello word");
   });
 
-  app.route("/login").get(accountController.loginAccount);
+  app.route("/account/login").get(accountController.loginAccount);
 
-  app.route("/register").post(accountController.registerAccount);
+  app.route("/account/register").post(accountController.registerAccount);
+
+  app.route("/account/getAllAccounts").get(accountController.getAllAccounts);
 
   app
     .route("/account/:idAccount")
@@ -19,7 +21,11 @@ module.exports = function (authMiddleware, app) {
     .patch(authMiddleware, accountController.updateAccount)
     .delete(authMiddleware, accountController.deleteAccount);
 
-  app.route("/door").post(authMiddleware, doorController.createDoor);
+  app.route("/door/create").post(authMiddleware, doorController.createDoor);
+
+  app
+    .route("/door/getAllDoors")
+    .get(authMiddleware, doorController.getAllDoors);
 
   app
     .route("/door/:idDoor")
@@ -27,7 +33,13 @@ module.exports = function (authMiddleware, app) {
     .patch(authMiddleware, doorController.updateDoor)
     .delete(authMiddleware, doorController.deleteDoor);
 
-  app.route("/ticket").post(authMiddleware, ticketController.createTicket);
+  app
+    .route("/ticket/create")
+    .post(authMiddleware, ticketController.createTicket);
+
+  app
+    .route("/ticket/getAllTickets/:idAccount")
+    .get(authMiddleware, ticketController.getTickets);
 
   app
     .route("/ticket/:idTicket")
@@ -35,7 +47,19 @@ module.exports = function (authMiddleware, app) {
     .patch(authMiddleware, ticketController.updateTicket)
     .delete(authMiddleware, ticketController.deleteTicket);
 
-  app.route("/token").post(tokenController.createToken);
+  app.route("/token/create").post(tokenController.createToken);
+
+  app
+    .route("/token/getTokenByUserId/:idAccount")
+    .get(tokenController.getTokenByUserId);
+
+  app
+    .route("/token/getTokenByDoorId/:idDoor")
+    .get(tokenController.getTokenByDoorId);
+
+  app
+    .route("/token/getTokenByUserIdAndDoorId/:idAccount/:idDoor")
+    .get(tokenController.getTokenByUserIdAndDoorId);
 
   app
     .route("/token/:idToken")
@@ -43,7 +67,7 @@ module.exports = function (authMiddleware, app) {
     .patch(authMiddleware, tokenController.updateToken)
     .delete(authMiddleware, tokenController.deleteToken);
 
-  app.route("/log").post(logController.createLog);
+  app.route("/log/create").post(logController.createLog);
 
   app
     .route("/log/:idLog")

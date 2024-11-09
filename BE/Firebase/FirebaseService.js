@@ -5,10 +5,12 @@ const googleService = require("../../key/google-services.json");
 const constantValue = require("../constants.json");
 const util = require("../../util");
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: googleService.project_info.firebase_url,
-});
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: googleService.project_info.firebase_url,
+  });
+}
 
 const fsdb = admin.firestore();
 const rtdb = admin.database();
@@ -16,11 +18,8 @@ const rtdb = admin.database();
 const accountCollection = fsdb.collection(constantValue.accountsCollection);
 const doorCollection = fsdb.collection(constantValue.doorsCollection);
 const ticketCollection = fsdb.collection(constantValue.ticketsCollection);
-// const tokenCollection = fsdb.collection(constantValue.tokensCollection);
 const logCollection = fsdb.collection(constantValue.logsCollection);
 const entryLogCollection = fsdb.collection(constantValue.entryLogsCollection);
-
-// const tokenRef = rtdb.ref(constantValue.tokensCollection);
 
 // ------------ Account ------------
 
@@ -30,6 +29,7 @@ const accountService = {
   updateAccount,
   deleteAccount,
   getAccount,
+  getAllAccounts,
 };
 
 async function registerAccount(accountData) {
@@ -47,11 +47,8 @@ async function registerAccount(accountData) {
       arrDoor: [],
       role: ["user"],
     });
-
-    console.log(`User ${accountData.email} added successfully.`);
     return true;
   } catch (error) {
-    console.error("Error register: ", error);
     return false;
   }
 }
@@ -73,16 +70,11 @@ async function loginAccount(username, password) {
 
     if (!userSnapshot.empty) {
       const userData = userSnapshot.docs[0].data();
-      console.log(
-        `Login successful for user: ${userData.email || userData.phoneNumber}`
-      );
-      return userSnapshot.docs[0].id;
+      return userData;
     } else {
-      console.log("Login failed: Invalid username or password.");
       return false;
     }
   } catch (error) {
-    console.error("Error login: ", error);
     return false;
   }
 }
@@ -92,15 +84,13 @@ async function updateAccount(idAccount, accountDataUpdate) {
     const dataToUpdate = { ...accountDataUpdate };
 
     delete dataToUpdate.idAccount;
-
-    dataToUpdate.password = await util.hashPassword(dataToUpdate.password);
+    if (dataToUpdate.password) {
+      dataToUpdate.password = await util.hashPassword(dataToUpdate.password);
+    }
 
     await accountCollection.doc(idAccount).update(dataToUpdate);
-
-    console.log(`Account with ID ${idAccount} updated successfully.`);
     return true;
   } catch (error) {
-    console.error("Error updating account: ", error);
     return false;
   }
 }
@@ -108,12 +98,8 @@ async function updateAccount(idAccount, accountDataUpdate) {
 async function deleteAccount(idAccountDelete) {
   try {
     await accountCollection.doc(idAccountDelete).delete();
-    console.log(
-      `Account with ID ${idAccountDelete} is  deleted  successfully.`
-    );
     return true;
   } catch (error) {
-    console.error("Error deleting account: ", error);
     return false;
   }
 }
@@ -123,11 +109,18 @@ async function getAccount(idAccount) {
     const accountSnapshot = await accountCollection.doc(idAccount).get();
     return accountSnapshot.data();
   } catch (error) {
-    console.error("Error getting account: ", error);
     return null;
   }
 }
 
+async function getAllAccounts() {
+  try {
+    const accountsSnapshot = await accountCollection.get();
+    return accountsSnapshot.docs.map((doc) => doc.data());
+  } catch (error) {
+    return [];
+  }
+}
 // ------------------------------
 
 // ------------ Door ------------
@@ -137,6 +130,7 @@ const doorService = {
   updateDoor,
   getDoor,
   deleteDoor,
+  getAllDoors,
 };
 const rolesToCheck = ["manager", "admin"];
 
@@ -153,14 +147,11 @@ async function createDoor(doorData) {
       idDoor: doorRef.id,
       idAccountCreate: doorData.idAccountCreate,
       position: doorData.position,
+      createdAt: new Date().toISOString(),
+      lastUpdate: new Date().toISOString(),
     });
-
-    console.log(
-      `Door at ${doorData.position} by ${doorData.idAccountCreate} added successfully.`
-    );
     return true;
   } catch (error) {
-    console.error("Error create door: ", error);
     return false;
   }
 }
@@ -178,11 +169,11 @@ async function updateDoor(idDoor, doorDataUpdate) {
       return false;
     }
 
+    doorDataUpdate.lastUpdate = new Date().toISOString();
+
     await doorCollection.doc(idDoor).update(doorDataUpdate);
-    console.log(`Door with ID ${idDoor} updated successfully.`);
     return true;
   } catch (error) {
-    console.error("Error update door: ", error);
     return false;
   }
 }
@@ -192,8 +183,16 @@ async function getDoor(idDoor) {
     const doorSnapshot = await doorCollection.doc(idDoor).get();
     return doorSnapshot.data();
   } catch (error) {
-    console.error("Error get door: ", error);
     return null;
+  }
+}
+
+async function getAllDoors() {
+  try {
+    const doorsSnapshot = await doorCollection.get();
+    return doorsSnapshot.docs.map((doc) => doc.data());
+  } catch (error) {
+    return [];
   }
 }
 
@@ -208,10 +207,8 @@ async function deleteDoor(idAccountDelete, idDoor) {
     }
 
     await doorCollection.doc(idDoor).delete();
-    console.log(`Door with ID ${idDoor} deleted successfully.`);
     return true;
   } catch (error) {
-    console.error("Error delete door: ", error);
     return false;
   }
 }
@@ -222,7 +219,6 @@ async function isCanCreateDoor(idAccount) {
     .where("role", "array-contains-any", rolesToCheck)
     .get();
   if (accountSnapshot.empty) {
-    console.log("Can't create door: Account is not a manager or admin.");
     return false;
   }
   return true;
@@ -234,9 +230,6 @@ async function isCanUpdateOrDeleteDoor(idAccount, idDoor) {
     .where("idAccountCreate", "==", idAccount)
     .get();
   if (doorSnapShot.empty) {
-    console.log(
-      `Can't update or delete door: Account ${idAccount} not create this door.`
-    );
     return false;
   }
   return true;
@@ -251,6 +244,8 @@ const ticketService = {
   updateTicket,
   getTicket,
   deleteTicket,
+  getTickets,
+  getAllTickets,
 };
 
 async function createTicket(ticketData) {
@@ -259,7 +254,6 @@ async function createTicket(ticketData) {
     const idTicket = ticketRef.id;
 
     if (!isTicketValid(ticketData.startTime, ticketData.endTime)) {
-      console.log(`End time is before start time.`);
       return false;
     }
 
@@ -269,12 +263,12 @@ async function createTicket(ticketData) {
       idAccount: ticketData.idAccount,
       startTime: ticketData.startTime,
       endTime: ticketData.endTime,
+      reason: ticketData.reason,
+      createdAt: new Date().toISOString(),
       isAccept: false,
     });
-    console.log(`Ticket ${idTicket} added successfully.`);
     return true;
   } catch (error) {
-    console.error("Error create ticket: ", error);
     return false;
   }
 }
@@ -282,7 +276,6 @@ async function createTicket(ticketData) {
 async function updateTicket(idTicket, ticketDataUpdate) {
   try {
     if (!isTicketValid(ticketDataUpdate.startTime, ticketDataUpdate.endTime)) {
-      console.log(`End time is before start time.`);
       return false;
     }
 
@@ -295,7 +288,6 @@ async function updateTicket(idTicket, ticketDataUpdate) {
     await ticketCollection.doc(idTicket).update(dataToUpdate);
     return true;
   } catch (error) {
-    console.error("Error update ticket: ", error);
     return false;
   }
 }
@@ -305,7 +297,6 @@ async function getTicket(idTicket) {
     const ticketSnapshot = await ticketCollection.doc(idTicket).get();
     return ticketSnapshot.data();
   } catch (error) {
-    console.error("Error get ticket: ", error);
     return null;
   }
 }
@@ -313,10 +304,8 @@ async function getTicket(idTicket) {
 async function deleteTicket(idTicket) {
   try {
     await ticketCollection.doc(idTicket).delete();
-    console.log(`Ticket with ID ${idTicket} deleted successfully.`);
     return true;
   } catch (error) {
-    console.error("Error delete ticket: ", error);
     return false;
   }
 }
@@ -331,6 +320,25 @@ function isTicketValid(startTime, endTime) {
   return true;
 }
 
+async function getTickets(idAccount) {
+  try {
+    const ticketsSnapshot = await ticketCollection
+      .where("idAccount", "==", idAccount)
+      .get();
+    return ticketsSnapshot.docs.map((doc) => doc.data());
+  } catch (error) {
+    return [];
+  }
+}
+
+async function getAllTickets() {
+  try {
+    const ticketsSnapshot = await ticketCollection.get();
+    return ticketsSnapshot.docs.map((doc) => doc.data());
+  } catch (error) {
+    return [];
+  }
+}
 // ------------------------------
 
 // ------------ Log ------------
@@ -356,7 +364,6 @@ async function createLog(logData) {
 
     return true;
   } catch (error) {
-    console.error("Error create entry log: ", error);
     return false;
   }
 }
@@ -366,7 +373,6 @@ async function getLog(idLog) {
     const logSnapshot = await logCollection.doc(idLog).get();
     return logSnapshot.data();
   } catch (error) {
-    console.error("Error get entry log: ", error);
     return null;
   }
 }
@@ -374,10 +380,8 @@ async function getLog(idLog) {
 async function deleteLog(idLog) {
   try {
     await logCollection.doc(idLog).delete();
-    console.log(`Entry log with ID ${idLog} deleted successfully.`);
     return true;
   } catch (error) {
-    console.error("Error delete entry log: ", error);
     return false;
   }
 }
@@ -391,6 +395,9 @@ const tokenService = {
   getToken,
   updateToken,
   deleteToken,
+  getTokenByUserId,
+  getTokenByDoorId,
+  getAllTokens,
 };
 
 async function createToken(tokenData) {
@@ -398,16 +405,20 @@ async function createToken(tokenData) {
     const keyToken = `${tokenData.idDoor}-${tokenData.idAccount}`;
     const expiredTime = tokenData.expiredTime;
 
+    const doorRef = doorCollection.doc(tokenData.idDoor);
+    const doorSnapshot = await doorRef.get();
+    const doorData = doorSnapshot.data();
+
+    const accountRef = accountCollection.doc(tokenData.idAccount);
+    const accountSnapshot = await accountRef.get();
+    const accountData = accountSnapshot.data();
+
     const tokenRef = rtdb.ref(`${constantValue.tokensCollection}/${keyToken}`);
     await tokenRef.set({
-      value: expiredTime,
+      value: doorData.position + "_" + accountData.refId + "_" + expiredTime,
     });
-    console.log(
-      `Token ${keyToken} with expired time ${expiredTime} added successfully.`
-    );
     return true;
   } catch (error) {
-    console.error("Error create token: ", error);
     return false;
   }
 }
@@ -418,7 +429,6 @@ async function getToken(idToken) {
     const data = await tokenRef.once("value");
     return data.val();
   } catch (error) {
-    console.error("Error get token: ", error);
     return false;
   }
 }
@@ -427,12 +437,8 @@ async function updateToken(idToken, tokenDataUpdate) {
   try {
     const tokenRef = rtdb.ref(`${constantValue.tokensCollection}/${idToken}`);
     await tokenRef.update({ value: tokenDataUpdate.expiredTime });
-    console.log(
-      `Token with ID ${idToken} updated with expired time: "${tokenDataUpdate.expiredTime}" successfully.`
-    );
     return true;
   } catch (error) {
-    console.error("Error update token: ", error);
     return false;
   }
 }
@@ -441,14 +447,66 @@ async function deleteToken(idToken) {
   try {
     const tokenRef = rtdb.ref(`${constantValue.tokensCollection}/${idToken}`);
     await tokenRef.remove();
-    console.log(`Token with ID ${idToken} deleted successfully.`);
     return true;
   } catch (error) {
-    console.error("Error delete token: ", error);
     return false;
   }
 }
 
+async function getTokenByUserId(idAccount) {
+  try {
+    const tokensRef = rtdb.ref(constantValue.tokensCollection);
+    const snapshot = await tokensRef.once("value");
+    const tokens = snapshot.val();
+
+    if (!tokens) return null;
+
+    for (const idToken in tokens) {
+      if (idToken.split("-")[1] === idAccount) {
+        return tokens[idToken];
+      }
+    }
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function getTokenByDoorId(idDoor) {
+  try {
+    const tokensRef = rtdb.ref(constantValue.tokensCollection);
+    const snapshot = await tokensRef.once("value");
+    const tokens = snapshot.val();
+
+    if (!tokens) return null;
+
+    for (const idToken in tokens) {
+      if (idToken.split("-")[0] === idDoor) {
+        return tokens[idToken];
+      }
+    }
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function getTokenByUserIdAndDoorId(idAccount, idDoor) {
+  const keyToken = `${idDoor}-${idAccount}`;
+  const token = await getToken(keyToken);
+  return token;
+}
+
+async function getAllTokens() {
+  try {
+    const tokensRef = rtdb.ref(constantValue.tokensCollection);
+    const snapshot = await tokensRef.once("value");
+    const tokens = snapshot.val();
+    return tokens;
+  } catch (error) {
+    return null;
+  }
+}
 // ------------------------------
 
 module.exports = {

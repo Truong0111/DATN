@@ -29,6 +29,22 @@ function authMiddleware(req, res, next) {
 
 routes(authMiddleware, app);
 
+const scanTicket = require("./ServerFunction").scanTicket;
+const scanToken = require("./ServerFunction").scanToken;
+
+async function scanTicketAndToken() {
+  await scanTicket();
+  await scanToken();
+}
+
+setInterval(async () => {
+  try {
+    await scanTicketAndToken();
+  } catch (error) {
+    console.error("Có lỗi xảy ra khi thực hiện task:", error);
+  }
+}, 3000000);
+
 app.use(function (req, res) {
   res.status(404).send({ url: req.originalUrl + " not found" });
 });

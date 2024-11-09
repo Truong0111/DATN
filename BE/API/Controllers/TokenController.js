@@ -1,44 +1,54 @@
 const tokenService = require("../../Firebase/FirebaseService").tokenService;
 
 module.exports = {
-  createToken: async (req, res) => {
-    const tokenData = req.body;
+  createToken: async (tokenData) => {
     const createSuccess = await tokenService.createToken(tokenData);
     if (createSuccess) {
-      res.status(200).send("Create token successful.");
+      return true;
     } else {
-      res.status(400).send("Create token failed.");
+      return false;
     }
   },
-  getToken: async (req, res) => {
-    const idToken = req.params.idToken;
+  getToken: async (idToken) => {
     const token = await tokenService.getToken(idToken);
-    if (token) {
-      res.status(200).send(token);
-    } else {
-      res.status(404).send("Token not found.");
-    }
+    return token;
   },
-  updateToken: async (req, res) => {
-    const idToken = req.params.idToken;
-    const tokenDataUpdate = req.body;
+  updateToken: async (idToken, tokenDataUpdate) => {
     const updateSuccess = await tokenService.updateToken(
       idToken,
       tokenDataUpdate
     );
     if (updateSuccess) {
-      res.status(200).send("Update token successful.");
+      return true;
     } else {
-      res.status(400).send("Update token failed.");
+      return false;
     }
   },
-  deleteToken: async (req, res) => {
-    const idToken = req.params.idToken;
+  deleteToken: async (idToken) => {
     const deleteSuccess = await tokenService.deleteToken(idToken);
     if (deleteSuccess) {
-      res.status(200).send("Delete token successful.");
+      return true;
     } else {
-      res.status(400).send("Delete token failed.");
+      return false;
     }
+  },
+  getTokenByUserId: async (idAccount) => {
+    const token = await tokenService.getTokenByUserId(idAccount);
+    return token;
+  },
+  getTokenByDoorId: async (idDoor) => {
+    const token = await tokenService.getTokenByDoorId(idDoor);
+    return token;
+  },
+  getTokenByUserIdAndDoorId: async (idAccount, idDoor) => {
+    const token = await tokenService.getTokenByUserIdAndDoorId(
+      idAccount,
+      idDoor
+    );
+    return token;
+  },
+  getAllTokens: async () => {
+    const tokens = await tokenService.getAllTokens();
+    return tokens;
   },
 };

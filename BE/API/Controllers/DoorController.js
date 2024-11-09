@@ -5,9 +5,9 @@ module.exports = {
     const doorData = req.body;
     const createSuccess = await doorService.createDoor(doorData);
     if (createSuccess) {
-      res.status(200).send(`Create door at ${doorData.position} successful.`);
+      res.status(200).send({ message: `Create door at ${doorData.position} successful.` });
     } else {
-      res.status(400).send(`Create door at ${doorData.position} failed.`);
+      res.status(400).send({ message: `Create door at ${doorData.position} failed.` });
     }
   },
   getDoor: async (req, res) => {
@@ -16,7 +16,7 @@ module.exports = {
     if (doorData) {
       res.status(200).send(doorData);
     } else {
-      res.status(404).send(`Door has id ${idDoor} not found.`);
+      res.status(404).send({ message: `Door has id ${idDoor} not found.` });
     }
   },
   updateDoor: async (req, res) => {
@@ -28,9 +28,9 @@ module.exports = {
       doorDataUpdate
     );
     if (updateSuccess) {
-      res.status(200).send(`Update door ${idDoor} successful.`);
+      res.status(200).send({ message: `Update door ${idDoor} successful.` });
     } else {
-      res.status(400).send(`Update door ${idDoor} failed.`);
+      res.status(400).send({ message: `Update door ${idDoor} failed.` });
     }
   },
 
@@ -40,9 +40,18 @@ module.exports = {
     
     const deleteSuccess = await doorService.deleteDoor(idAccountDelete, idDoor);
     if (deleteSuccess) {
-      res.status(200).send(`Delete door ${idDoor} successful.`);
+      res.status(200).send({ message: `Delete door ${idDoor} successful.` });
     } else {
-      res.status(400).send(`Delete door ${idDoor} failed.`);
+      res.status(400).send({ message: `Delete door ${idDoor} failed.` });
+    }
+  },
+
+  getAllDoors: async (req, res) => {
+    const doors = await doorService.getAllDoors();
+    if (doors) {
+      res.status(200).send(doors);
+    } else {
+      res.status(404).send({ message: "Cannot get any door." });
     }
   },
 };
