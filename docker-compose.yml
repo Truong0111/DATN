@@ -1,0 +1,30 @@
+version: "0.1.0"
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+    command: npm start
+    container_name: node-app
+    environment:
+      PORT: 3000
+      JWT_SECRET: "secret"
+      SALT_KEY: "Truongtq204859"
+      SALT_ROUND: 10
+      MQTT_Username: "truongtq"
+      MQTT_Password: "20204859"
+    depends_on:
+      - mqtt-broker
+  mqtt-broker:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config:rw
+      - ./mosquitto/data:/mosquitto/data:rw
+      - ./mosquitto/log:/mosquitto/log:rw
+    restart: unless-stopped

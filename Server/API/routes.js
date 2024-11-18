@@ -9,7 +9,7 @@ module.exports = function (authMiddleware, app) {
     res.status(200).send("Hello word");
   });
 
-  app.route("/account/login").get(accountController.loginAccount);
+  app.route("/account/login").post(accountController.loginAccount);
 
   app.route("/account/register").post(accountController.registerAccount);
 

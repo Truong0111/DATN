@@ -134,7 +134,4 @@ key
 
 #uncommit
 note.txt
-FE
 .idea
-Dockerfile
-docker-compose.yml

@@ -6,7 +6,7 @@
   "logsCollection": "logs",
   "entryLogsCollection": "entryLogs",
   "timeData": {
-    "seconds": 5,
+    "seconds": 10,
     "minutes": 0,
     "hours": 0,
     "days": 0,
