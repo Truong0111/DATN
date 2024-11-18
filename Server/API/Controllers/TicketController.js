@@ -51,4 +51,8 @@ module.exports = {
             res.status(404).send({message: "Cannot get any ticket."});
         }
     },
+
+    getAllTicketsFromServer: async () => {
+        return await ticketService.getAllTickets();
+    }
 };

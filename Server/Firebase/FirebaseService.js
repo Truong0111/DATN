@@ -393,11 +393,12 @@ const tokenService = {
     getTokenByDoorId,
     getTokenByUserIdAndDoorId,
     getAllTokens,
+    getTicketWithIdToken,
 };
 
 async function createToken(tokenData) {
     try {
-        const keyToken = `${tokenData.idDoor}-${tokenData.idAccount}`;
+        const keyToken = `${tokenData.idDoor}_${tokenData.idAccount}`;
         const expiredTime = tokenData.expiredTime;
 
         const doorRef = doorCollection.doc(tokenData.idDoor);
@@ -431,7 +432,16 @@ async function getToken(idToken) {
 async function updateToken(idToken, tokenDataUpdate) {
     try {
         const tokenRef = rtdb.ref(`${constantValue.tokensCollection}/${idToken}`);
-        await tokenRef.update({value: tokenDataUpdate.expiredTime});
+
+        const doorRef = doorCollection.doc(tokenDataUpdate.idDoor);
+        const doorSnapshot = await doorRef.get();
+        const doorData = doorSnapshot.data();
+
+        const accountRef = accountCollection.doc(tokenDataUpdate.idAccount);
+        const accountSnapshot = await accountRef.get();
+        const accountData = accountSnapshot.data();
+
+        await tokenRef.update({value: `${doorData}_${accountData}_${tokenDataUpdate.expiredTime}`});
         return true;
     } catch (error) {
         return false;
@@ -459,7 +469,7 @@ async function getTokenByUserId(idAccount) {
         const result = [];
 
         for (const idToken in tokens) {
-            if (idToken.split("-")[1] === idAccount) {
+            if (idToken.split("_")[1] === idAccount) {
                 result.push({
                     idToken: idToken,
                     tokenData: tokens[idToken]
@@ -481,7 +491,7 @@ async function getTokenByDoorId(idDoor) {
         if (!tokens) return null;
 
         for (const idToken in tokens) {
-            if (idToken.split("-")[0] === idDoor) {
+            if (idToken.split("_")[0] === idDoor) {
                 return tokens[idToken];
             }
         }
@@ -492,7 +502,7 @@ async function getTokenByDoorId(idDoor) {
 }
 
 async function getTokenByUserIdAndDoorId(idAccount, idDoor) {
-    const keyToken = `${idDoor}-${idAccount}`;
+    const keyToken = `${idDoor}_${idAccount}`;
     return await getToken(keyToken);
 }
 
@@ -501,6 +511,20 @@ async function getAllTokens() {
         const tokensRef = rtdb.ref(constantValue.tokensCollection);
         const snapshot = await tokensRef.once("value");
         return snapshot.val();
+    } catch (error) {
+        return null;
+    }
+}
+
+
+async function getTicketWithIdToken(idToken) {
+    try {
+        const [idDoor, idAccount] = idToken.split('_');
+        const ticketSnapshot = await ticketCollection
+            .where("idDoor", "==", idDoor)
+            .where("idAccount", "==", idAccount)
+            .get();
+        return ticketSnapshot.docs[0].data();
     } catch (error) {
         return null;
     }

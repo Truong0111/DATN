@@ -9,6 +9,7 @@ require("dotenv").config({path: "../.env"});
 let PORT = process.env.PORT || 3000;
 
 let routes = require(".//API/routes");
+const constantValue = require("./constants.json");
 
 const app = express();
 
@@ -36,13 +37,27 @@ async function scanTicketAndToken() {
     await serverService.scanToken();
 }
 
+const timeData = constantValue.timeData;
+const msPerSecond = 1000;
+const msPerMinute = msPerSecond * 60;
+const msPerHour = msPerMinute * 60;
+const msPerDay = msPerHour * 24;
+const msPerMonth = msPerDay * 30;
+
+const totalDelay =
+    timeData.seconds * msPerSecond +
+    timeData.minutes * msPerMinute +
+    timeData.hours * msPerHour +
+    timeData.days * msPerDay +
+    timeData.months * msPerMonth;
+
 setInterval(async () => {
     try {
         await scanTicketAndToken();
     } catch (error) {
         console.error("Error when do task:", error);
     }
-}, 300000);
+}, totalDelay);
 
 app.use(function (req, res) {
     res.status(404).send({url: req.originalUrl + " not found"});
