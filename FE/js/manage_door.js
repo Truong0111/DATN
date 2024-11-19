@@ -57,9 +57,8 @@ function populateEditDoorForm(door) {
 
 // Function
 async function fetchAndUpdateDoorManager() {
-    const token = getToken();
     try {
-        const doors = await fetchDoors(token);
+        const doors = await fetchDoors();
         const tableBody = document.getElementById("doorTableBody");
         tableBody.innerHTML = doors
             .map((door) => `
@@ -92,8 +91,8 @@ async function createNewDoor() {
     const position = document.getElementById("newDoorPosition").value;
 
     try {
-        await fetchCreateDoorRequest(token, idAccount, position);
-        closeModalAndRefresh("createDoorModal", showDoorManager);
+        await fetchCreateDoorRequest(idAccount, position);
+        await closeModalAndRefresh("createDoorModal", showDoorManager);
     } catch (error) {
         handleError("Error creating door:", error);
     }
@@ -134,7 +133,7 @@ async function saveDoorChanges() {
     const idAccount = getAccountId(token);
 
     try {
-        await fetchUpdateDoorRequest(token, idDoor, position, idAccount);
+        await fetchUpdateDoorRequest(idDoor, position, idAccount);
         await closeModalAndRefresh("editDoorModal", showDoorManager);
     } catch (error) {
         handleError("Error updating door:", error);
@@ -143,12 +142,18 @@ async function saveDoorChanges() {
 
 async function deleteDoor(element) {
     const idDoor = element.dataset.idDoor;
-    if (!confirm("Are you sure you want to delete this door?")) return;
+    const ticketsRefIdDoor = await fetchTicketsRefDoor(idDoor);
+    const numberTicker = ticketsRefIdDoor.length;
+    const confirmText = `Are you sure you want to delete this door?\n`
+        + `Has ${numberTicker} ticket${numberTicker === 1 ? "" : "s"} request for this door.\n`
+        + `It will also delete those tickets!!!`;
+
+    if (!confirm(confirmText)) return;
 
     try {
         const token = getToken();
         const idAccount = getAccountId(token);
-        await fetchDeleteDoorRequest(token, idDoor, idAccount);
+        await fetchDeleteDoorRequest(idDoor, idAccount);
         await showDoorManager();
     } catch (error) {
         handleError("Error deleting door:", error);
@@ -156,9 +161,9 @@ async function deleteDoor(element) {
 }
 
 //API
-async function fetchDoors(token) {
+async function fetchDoors() {
+    const token = getToken();
     const api = `${ref}/door/getAllDoors`;
-
     const response = await getResponse(api, "GET", token);
 
     if (!response.ok) throw new Error("Failed to fetch doors");
@@ -166,18 +171,17 @@ async function fetchDoors(token) {
     return response.json();
 }
 
-async function fetchDoorById(token, idDoor) {
+async function fetchDoorById(idDoor) {
     const api = `${ref}/doors/${idDoor}`;
+    const token = getToken();
 
-    const response = await fetch(api, {
-        method: "GET",
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
+    const response = await getResponse(api, "GET", token);
+
+    return response.json();
 }
 
-async function fetchCreateDoorRequest(token, idAccount, position) {
+async function fetchCreateDoorRequest(idAccount, position) {
+    const token = getToken();
     const api = `${ref}/door/create`;
 
     const body = JSON.stringify({
@@ -195,8 +199,8 @@ async function fetchCreateDoorRequest(token, idAccount, position) {
 }
 
 async function fetchGetDoorDetailsRequest(idDoor) {
-    const api = `${ref}/door/${idDoor}`;
     const token = getToken();
+    const api = `${ref}/door/${idDoor}`;
 
     const response = await getResponse(api, "GET", token);
 
@@ -204,7 +208,8 @@ async function fetchGetDoorDetailsRequest(idDoor) {
     return response.json();
 }
 
-async function fetchUpdateDoorRequest(token, idDoor, position, idAccount) {
+async function fetchUpdateDoorRequest(idDoor, position, idAccount) {
+    const token = getToken();
     const api = `${ref}/door/${idDoor}`;
     const body = JSON.stringify({
         idAccountCreate: idAccount,
@@ -219,7 +224,8 @@ async function fetchUpdateDoorRequest(token, idDoor, position, idAccount) {
     return true;
 }
 
-async function fetchDeleteDoorRequest(token, idDoor, idAccount) {
+async function fetchDeleteDoorRequest(idDoor, idAccount) {
+    const token = getToken();
     const api = `${ref}/door/${idDoor}`;
 
     const body = JSON.stringify({
@@ -233,5 +239,16 @@ async function fetchDeleteDoorRequest(token, idDoor, idAccount) {
         throw new Error(errorData);
     }
     return true;
+}
+
+async function fetchTicketsRefDoor(idDoor) {
+    const token = getToken();
+    const api = `${ref}/ticket/idDoor/${idDoor}`;
+    const response = await getResponse(api, "GET", token);
+    if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(errorData);
+    }
+    return response.json();
 }
 

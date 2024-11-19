@@ -19,9 +19,9 @@ async function fetchAndUpdateDashboardManger() {
 
     try {
         const [account, doors, tickets] = await Promise.all([
-            fetchAccountDataRequest(token, idAccount),
-            fetchDoors(token),
-            fetchTickets(token, idAccount),
+            fetchAccountDataRequest(idAccount),
+            fetchDoors(),
+            fetchTickets(idAccount),
         ]);
 
         // Update account info

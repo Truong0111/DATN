@@ -118,7 +118,7 @@ async function fetchAndUpdateTicketManager() {
     const token = getToken();
     const idAccount = getAccountId(token);
     try {
-        const tickets = await fetchTickets(token, idAccount);
+        const tickets = await fetchTickets(idAccount);
         const tableBody = document.getElementById("ticketTableBody");
 
         const ticketsWithDoors = await Promise.all(
@@ -168,9 +168,8 @@ async function showRegisterTicketModal() {
 }
 
 async function populateDoorSelect() {
-    const token = getToken();
     try {
-        const doors = await fetchDoors(token);
+        const doors = await fetchDoors();
         const select = document.getElementById("doorSelect");
         select.innerHTML = doors
             .map((door) => `<option value="${door.idDoor}">${door.position}</option>`)
@@ -200,7 +199,7 @@ async function submitTicket() {
     const ticketData = getTicketFormData(getAccountId(token));
 
     try {
-        await fetchCreateTicketRequest(token, ticketData);
+        await fetchCreateTicketRequest(ticketData);
         await closeModalAndRefresh("registerTicketModal", showTicketManager);
     } catch (error) {
         handleError("Error creating ticket:", error);
@@ -252,20 +251,18 @@ function getTicketFormData(idAccount) {
 }
 
 //API
-async function fetchTickets(token, idAccount) {
-    const api = `${ref}/ticket/getAllTickets/${idAccount}`;
+async function fetchTickets(idAccount) {
+    const token = getToken();
+    const api = `${ref}/ticket/idAccount/${idAccount}`;
 
-    const response = await fetch(api, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-    );
+    const response = await getResponse(api, "GET", token);
+
     if (!response.ok) throw new Error("Failed to fetch tickets");
     return response.json();
 }
 
-async function fetchCreateTicketRequest(token, ticketData) {
+async function fetchCreateTicketRequest(ticketData) {
+    const token = getToken();
     const api = `${ref}/ticket/create`;
     const response = await fetch(api, {
         method: "POST",
@@ -297,8 +294,8 @@ async function fetchTicketDetailsRequest(idTicket) {
 }
 
 async function fetchAcceptTicketRequest(idTicket) {
-    const api = `${ref}/ticket/${idTicket}`;
     const token = getToken();
+    const api = `${ref}/ticket/${idTicket}`;
     const body = JSON.stringify({
         isAccept: true,
     });
@@ -312,8 +309,8 @@ async function fetchAcceptTicketRequest(idTicket) {
 }
 
 async function fetchRejectTicketRequest(idTicket) {
-    const api = `${ref}/ticket/${idTicket}`;
     const token = getToken();
+    const api = `${ref}/ticket/${idTicket}`;
     const body = JSON.stringify({
         isAccept: false,
     });
@@ -327,8 +324,8 @@ async function fetchRejectTicketRequest(idTicket) {
 }
 
 async function fetchDeleteTicketRequest(idTicket) {
-    const api = `${ref}/ticket/${idTicket}`;
     const token = getToken();
+    const api = `${ref}/ticket/${idTicket}`;
 
     const response = await getResponse(api, "DELETE", token);
 

@@ -1,3 +1,4 @@
+const ticketController = require("./Controllers/TicketController");
 module.exports = function (authMiddleware, app) {
   let accountController = require("./Controllers/AccountController");
   let doorController = require("./Controllers/DoorController");
@@ -38,14 +39,17 @@ module.exports = function (authMiddleware, app) {
     .post(authMiddleware, ticketController.createTicket);
 
   app
-    .route("/ticket/getAllTickets/:idAccount")
-    .get(authMiddleware, ticketController.getTickets);
-
-  app
     .route("/ticket/:idTicket")
     .get(authMiddleware, ticketController.getTicket)
     .patch(authMiddleware, ticketController.updateTicket)
     .delete(authMiddleware, ticketController.deleteTicket);
+
+  app
+      .route("/ticket/idAccount/:idAccount")
+      .get(authMiddleware, ticketController.getTicketsByIdAccount);
+
+  app.route("/ticket/idDoor/:idDoor")
+      .get(authMiddleware, ticketController.getTicketsByIdDoor)
 
   app.route("/token/create").post(tokenController.createToken);
 

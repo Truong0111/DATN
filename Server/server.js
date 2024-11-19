@@ -76,39 +76,48 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
-/*
+
 // ----- MQTT -----
-const mqtt = require("mqtt");
-const brokerUrl = "mqtt://mqtt-broker:1883";
-
-const options = {
-    username: process.env.MQTT_Username,
-    password: process.env.MQTT_Password,
-};
-
-const client = mqtt.connect(brokerUrl, options);
-
-const topic = "qr/door";
-
-const mqttService = require("./ServerFunction").mqttService;
-
-client.on("connect", () => {
-    console.log("Connecting to mqtt broker...");
-
-    client.subscribe(topic, async (err) => {
-        if (err) {
-            console.error("Error subscribe topic:", err);
-        } else {
-            console.log("Subscribe topic:", topic);
-        }
-    });
-});
-
-client.on("message", async (topic, message) => {
-    mqttService.getMessage(message.toString());
-});
-
-client.on("error", (error) => {
-    console.error("Error when connect:", error);
-});
-*/
+// const mqtt = require("mqtt");
+// const brokerUrl = "mqtt://mqtt-broker:1883";
+//
+// const options = {
+//     username: process.env.MQTT_Username,
+//     password: process.env.MQTT_Password,
+// };
+//
+// const clientSend = mqtt.connect(brokerUrl, options);
+// const clientGet = mqtt.connect(brokerUrl, options)
+//
+// const topic = "qr/door";
+//
+// const mqttService = require("./ServerFunction").mqttService;
+//
+// clientGet.on("connect", () => {
+//     console.log("Connecting to mqtt broker... from get");
+//
+//     clientGet.subscribe(topic, async (err) => {
+//         if (err) {
+//             console.error("Error subscribe topic:", err);
+//         } else {
+//             console.log("Subscribe topic:", topic);
+//         }
+//     });
+// });
+//
+// clientGet.on("message", async (topic, message) => {
+//     mqttService.getMessage(`Get ${message.toString()} from get`);
+// });
+//
+// clientGet.on("error", (error) => {
+//     console.error("Error when connect:", error);
+// });
+//
+// clientSend.on("connect",async () => {
+//     console.log("Connected to mqtt broker... from send");
+//     clientSend.publish(topic, "Alo from send");
+// })
+//
+// clientSend.on("error", (error) => {
+//     console.error("Error when connect:", error);
+// });

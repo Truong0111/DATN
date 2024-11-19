@@ -51,7 +51,7 @@ async function viewQR(element) {
     }
 }
 
-function generateQR(token){
+function generateQR(token) {
     const text = token.value.toString();
     if (text) {
         QRCode.toCanvas(document.getElementById("qrCodeCanvas"), text, function (error) {
@@ -66,10 +66,10 @@ function generateQR(token){
     }
 }
 
+
 async function fetchAndUpdateQrCodeManager() {
-    const token = getToken();
     try {
-        const tokenDatas = await fetchQrCodes(token);
+        const tokenDatas = await fetchQrCodes();
         const result = [];
 
         tokenDatas.forEach((token) => {
@@ -100,7 +100,9 @@ async function fetchAndUpdateQrCodeManager() {
     }
 }
 
-async function fetchQrCodes(token) {
+//API
+async function fetchQrCodes() {
+    const token = getToken();
     const idAccount = getAccountId();
 
     const api = `${ref}/token/getTokenByUserId/${idAccount}`;
@@ -115,8 +117,8 @@ async function fetchQrCodes(token) {
 }
 
 async function fetchTokenDetailsRequest(idToken) {
-    const api = `${ref}/token/${idToken}`;
     const token = getToken();
+    const api = `${ref}/token/${idToken}`;
 
     const response = await getResponse(api, "GET", token);
 

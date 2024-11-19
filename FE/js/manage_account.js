@@ -60,7 +60,7 @@ async function fetchAndUpdateAccountManager() {
     const token = getToken();
     const idAccount = getAccountId(token);
     try {
-        const account = await fetchAccountDataRequest(token, idAccount);
+        const account = await fetchAccountDataRequest(idAccount);
         document.getElementById("name").value =
             account.firstName + " " + account.lastName;
         document.getElementById("email").value = account.email;
@@ -106,7 +106,7 @@ function setupAccountFormSubmit(form) {
         };
 
         try {
-            await fetchUpdateAccountRequest(token, accountData);
+            await fetchUpdateAccountRequest(accountData);
             await fetchAndUpdateAccountManager();
             form
                 .querySelectorAll("input")
@@ -120,7 +120,8 @@ function setupAccountFormSubmit(form) {
 }
 
 //API
-async function fetchAccountDataRequest(token, idAccount) {
+async function fetchAccountDataRequest(idAccount) {
+    const token = getToken();
     const api = `${ref}/account/${idAccount}`;
 
     const response = await getResponse(api, "GET", token, null);
@@ -129,7 +130,8 @@ async function fetchAccountDataRequest(token, idAccount) {
     return response.json();
 }
 
-async function fetchUpdateAccountRequest(token, accountData) {
+async function fetchUpdateAccountRequest(accountData) {
+    const token = getToken();
     const api = `${ref}/account/${accountData.idAccount}`;
     const body = JSON.stringify(accountData);
     const response = await getResponseWithBody(api, "PATCH", token, body);

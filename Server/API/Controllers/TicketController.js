@@ -42,13 +42,23 @@ module.exports = {
             res.status(400).send({message: "Delete ticket failed."});
         }
     },
-    getTickets: async (req, res) => {
+    getTicketsByIdAccount: async (req, res) => {
         const idAccount = req.params.idAccount;
-        const tickets = await ticketService.getTickets(idAccount);
+        const tickets = await ticketService.getTicketsByIdAccount(idAccount);
         if (tickets) {
             res.status(200).send(tickets);
         } else {
-            res.status(404).send({message: "Cannot get any ticket."});
+            res.status(404).send({message: "Cannot get any ticket by id account."});
+        }
+    },
+
+    getTicketsByIdDoor: async (req, res) => {
+        const idDoor = req.params.idDoor;
+        const tickets = await ticketService.getTicketsByIdDoor(idDoor);
+        if (tickets) {
+            res.status(200).send(tickets);
+        } else {
+            res.status(404).send({message: "Cannot get any ticket by id door."});
         }
     },
 

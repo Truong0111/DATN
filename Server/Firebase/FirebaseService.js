@@ -204,7 +204,10 @@ async function deleteDoor(idAccountDelete, idDoor) {
         if (!isAccountCanDeleteDoor) {
             return false;
         }
-
+        const ticketRef = await getTicketsRefByIdDoor(idDoor);
+        ticketRef.forEach((docRef) => {
+            deleteTicket(docRef.id);
+        })
         await doorCollection.doc(idDoor).delete();
         return true;
     } catch (error) {
@@ -239,7 +242,8 @@ const ticketService = {
     updateTicket,
     getTicket,
     deleteTicket,
-    getTickets,
+    getTicketsByIdAccount,
+    getTicketsByIdDoor,
     getAllTickets,
 };
 
@@ -313,12 +317,34 @@ function isTicketValid(startTime, endTime) {
     return timeStart <= timeEnd;
 }
 
-async function getTickets(idAccount) {
+async function getTicketsByIdAccount(idAccount) {
     try {
         const ticketsSnapshot = await ticketCollection
             .where("idAccount", "==", idAccount)
             .get();
         return ticketsSnapshot.docs.map((doc) => doc.data());
+    } catch (error) {
+        return [];
+    }
+}
+
+async function getTicketsByIdDoor(idDoor) {
+    try {
+        const ticketsSnapshot = await ticketCollection
+            .where("idDoor", "==", idDoor)
+            .get();
+        return ticketsSnapshot.docs.map((doc) => doc.data());
+    } catch (error) {
+        return [];
+    }
+}
+
+async function getTicketsRefByIdDoor(idDoor) {
+    try {
+        const ticketsSnapshot = await ticketCollection
+            .where("idDoor", "==", idDoor)
+            .get();
+        return ticketsSnapshot.docs;
     } catch (error) {
         return [];
     }
