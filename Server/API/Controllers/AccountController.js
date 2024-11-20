@@ -1,8 +1,18 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config({path: "../.env"});
-const accountService = require("../../Firebase/FirebaseService").accountService;
+const accountService = require("../../Service/AccountService");
 
 module.exports = {
+    registerAccount: async (req, res) => {
+        const accountData = req.body;
+        const registerSuccess = await accountService.registerAccount(accountData);
+        if (registerSuccess) {
+            res.status(200).send({message: "Register account successful."});
+        } else {
+            res.status(400).send({message: "Register account failed."});
+        }
+    },
+
     loginAccount: async (req, res) => {
         const username = req.body.username;
         const password = req.body.password;
@@ -24,15 +34,7 @@ module.exports = {
             res.status(401).send({message: "Invalid username or password."});
         }
     },
-    registerAccount: async (req, res) => {
-        const accountData = req.body;
-        const registerSuccess = await accountService.registerAccount(accountData);
-        if (registerSuccess) {
-            res.status(200).send({message: "Register account successful."});
-        } else {
-            res.status(400).send({message: "Register account failed."});
-        }
-    },
+
     getAccount: async (req, res) => {
         const idAccount = req.params.idAccount;
         const account = await accountService.getAccount(idAccount);
@@ -42,6 +44,7 @@ module.exports = {
             res.status(404).send({message: "Account not found."});
         }
     },
+
     updateAccount: async (req, res) => {
         const idAccount = req.params.idAccount;
         const accountDataUpdate = req.body;
@@ -66,6 +69,7 @@ module.exports = {
             res.status(400).send({message: "Delete account failed."});
         }
     },
+
     getAllAccounts: async (req, res) => {
         try {
             const accounts = await accountService.getAllAccounts();

@@ -50,6 +50,7 @@ function renderAccountContent() {
                           </div>
                           <button type="button" class="btn btn-primary" onclick="enableAccountFormEdit()">Edit Account</button>
                           <button type="submit" class="btn btn-success d-none" id="saveButton">Save Changes</button>
+                          <button type="button" class="btn btn-dark d-none" id="cancelButton" onclick="disableAccountFormEdit()">Cancel</button>
                       </form>
                   </div>
               </div>
@@ -74,7 +75,12 @@ async function fetchAndUpdateAccountManager() {
 function enableAccountFormEdit() {
     const form = document.getElementById("account-form");
     enableAccountEditing(form);
-    setupAccountFormSubmit(form);
+    setupAccountFormAndSubmit(form);
+}
+
+function disableAccountFormEdit() {
+    const form = document.getElementById("account-form");
+    disableAccountEditing(form);
 }
 
 function enableAccountEditing(form) {
@@ -83,9 +89,19 @@ function enableAccountEditing(form) {
 
     form.querySelector(".passwordDiv").classList.remove("d-none");
     form.querySelector("#saveButton").classList.remove("d-none");
+    form.querySelector("#cancelButton").classList.remove("d-none");
 }
 
-function setupAccountFormSubmit(form) {
+function disableAccountEditing(form) {
+    const inputs = form.querySelectorAll("input");
+    inputs.forEach((input) => (input.disabled = true));
+
+    form.querySelector(".passwordDiv").classList.add("d-none");
+    form.querySelector("#saveButton").classList.add("d-none");
+    form.querySelector("#cancelButton").classList.add("d-none");
+}
+
+function setupAccountFormAndSubmit(form) {
     form.onsubmit = async (e) => {
         e.preventDefault();
         const token = getToken();
@@ -105,18 +121,18 @@ function setupAccountFormSubmit(form) {
             idAccount: idAccount,
         };
 
-        try {
-            await fetchUpdateAccountRequest(accountData);
-            await fetchAndUpdateAccountManager();
-            form
-                .querySelectorAll("input")
-                .forEach((input) => (input.disabled = true));
-            form.querySelector("#saveButton").classList.add("d-none");
-            form.querySelector(".passwordDiv").classList.add("d-none");
-        } catch (error) {
-            handleError("Error updating account:", error);
-        }
+        await submitForm(form, accountData)
     };
+}
+
+async function submitForm(form, accountData) {
+    try {
+        await fetchUpdateAccountRequest(accountData);
+        await fetchAndUpdateAccountManager();
+        disableAccountEditing(form);
+    } catch (error) {
+        handleError("Error updating account:", error);
+    }
 }
 
 //API
@@ -126,7 +142,10 @@ async function fetchAccountDataRequest(idAccount) {
 
     const response = await getResponse(api, "GET", token, null);
 
-    if (!response.ok) throw new Error("Failed to fetch account data");
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+    }
     return response.json();
 }
 
@@ -137,8 +156,8 @@ async function fetchUpdateAccountRequest(accountData) {
     const response = await getResponseWithBody(api, "PATCH", token, body);
 
     if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData);
+        const errorData = await response.json();
+        throw new Error(errorData.message);
     }
     return true;
 }

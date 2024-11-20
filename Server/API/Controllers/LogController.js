@@ -1,4 +1,4 @@
-const logService = require("../../Firebase/FirebaseService").logService;
+const logService = require("../../Service/LogService");
 
 module.exports = {
     createLog: async (req, res) => {

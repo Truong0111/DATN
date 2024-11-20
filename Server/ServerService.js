@@ -1,7 +1,6 @@
-const constantValue = require("./constants.json");
 const ticketController = require("./API/Controllers/TicketController");
 const tokenController = require("./API/Controllers/TokenController");
-const util = require("../utils");
+const util = require("./utils");
 const {MqttClient} = require("mqtt");
 
 const serverService = {
@@ -86,7 +85,7 @@ const serverService = {
                                 console.log(`Delete token with id ${idToken} failed on ticket check`);
                             }
                         } else {
-                            if(ticketCheck.isAccept === false) {
+                            if (ticketCheck.isAccept === false) {
                                 const [doorPosition, MSSV, endTime] = value.split('_')
                                 if (new Date(endTime) < new Date().toISOString()) {
                                     const deleteSuccess = await tokenController.deleteTokenFromServer(idToken);
@@ -126,4 +125,4 @@ const mqttService = {
     }
 }
 
-module.exports = {serverService, mqttService};
+module.exports = {serverFunction: serverService, mqttService};

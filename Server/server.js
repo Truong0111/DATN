@@ -1,18 +1,15 @@
-// const https = require("https");
-// const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-
 require("dotenv").config({path: "../.env"});
-let PORT = process.env.PORT || 3000;
+require("./Service/FirebaseService");
 
-let routes = require(".//API/routes");
-const constantValue = require("./constants.json");
+let routes = require("./API/routes");
+const util = require("./utils");
+const {serverFunction} = require("./ServerService");
 
 const app = express();
-
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(cors());
@@ -30,26 +27,10 @@ function authMiddleware(req, res, next) {
 
 routes(authMiddleware, app);
 
-const serverService = require("./ServerFunction").serverService;
-
 async function scanTicketAndToken() {
-    await serverService.scanTicket();
-    await serverService.scanToken();
+    await serverFunction.scanTicket();
+    await serverFunction.scanToken();
 }
-
-const timeData = constantValue.timeData;
-const msPerSecond = 1000;
-const msPerMinute = msPerSecond * 60;
-const msPerHour = msPerMinute * 60;
-const msPerDay = msPerHour * 24;
-const msPerMonth = msPerDay * 30;
-
-const totalDelay =
-    timeData.seconds * msPerSecond +
-    timeData.minutes * msPerMinute +
-    timeData.hours * msPerHour +
-    timeData.days * msPerDay +
-    timeData.months * msPerMonth;
 
 setInterval(async () => {
     try {
@@ -57,20 +38,13 @@ setInterval(async () => {
     } catch (error) {
         console.error("Error when do task:", error);
     }
-}, totalDelay);
+}, util.getTimeInterval());
 
 app.use(function (req, res) {
     res.status(404).send({url: req.originalUrl + " not found"});
 });
 
-// const options = {
-//     key: fs.readFileSync("./key/server.key"),
-//     cert: fs.readFileSync("./key/server.cert"),
-// };
-
-// https.createServer(options, app).listen(3000, () => {
-//     console.log("Secure server running on port 3000");
-// });
+let PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

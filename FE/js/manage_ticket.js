@@ -257,7 +257,10 @@ async function fetchTickets(idAccount) {
 
     const response = await getResponse(api, "GET", token);
 
-    if (!response.ok) throw new Error("Failed to fetch tickets");
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+    }
     return response.json();
 }
 
@@ -274,8 +277,8 @@ async function fetchCreateTicketRequest(ticketData) {
     });
 
     if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData);
+        const errorData = await response.json();
+        throw new Error(errorData.message);
     }
     return true;
 }
@@ -289,7 +292,10 @@ async function fetchTicketDetailsRequest(idTicket) {
             Authorization: `Bearer ${token}`,
         },
     });
-    if (!response.ok) throw new Error("Failed to fetch ticket details");
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+    }
     return response.json();
 }
 
@@ -302,8 +308,8 @@ async function fetchAcceptTicketRequest(idTicket) {
     const response = await getResponseWithBody(api, "PATCH", token, body);
 
     if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData);
+        const errorData = await response.json();
+        throw new Error(errorData.message);
     }
     return true;
 }
@@ -317,8 +323,8 @@ async function fetchRejectTicketRequest(idTicket) {
     const response = await getResponseWithBody(api, "PATCH", token, body);
 
     if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData);
+        const errorData = await response.json();
+        throw new Error(errorData.message);
     }
     return true;
 }
@@ -330,8 +336,8 @@ async function fetchDeleteTicketRequest(idTicket) {
     const response = await getResponse(api, "DELETE", token);
 
     if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData);
+        const errorData = await response.json();
+        throw new Error(errorData.message);
     }
     return true;
 }

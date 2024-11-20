@@ -1,4 +1,4 @@
-const tokenService = require("../../Firebase/FirebaseService").tokenService;
+const tokenService = require("../../Service/TokenService");
 
 module.exports = {
     createToken: async (req, res) => {

@@ -86,7 +86,6 @@ function showCreateDoorModal() {
 }
 
 async function createNewDoor() {
-    const token = getToken();
     const idAccount = getAccountId();
     const position = document.getElementById("newDoorPosition").value;
 
@@ -94,7 +93,7 @@ async function createNewDoor() {
         await fetchCreateDoorRequest(idAccount, position);
         await closeModalAndRefresh("createDoorModal", showDoorManager);
     } catch (error) {
-        handleError("Error creating door:", error);
+        handleError("Error creating door:\n", error);
     }
 }
 
@@ -192,10 +191,11 @@ async function fetchCreateDoorRequest(idAccount, position) {
     const response = await getResponseWithBody(api, "POST", token, body);
 
     if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData);
+        const errorData = await response.json();
+        throw new Error(errorData.message);
     }
-    return true;
+
+    return response.json();
 }
 
 async function fetchGetDoorDetailsRequest(idDoor) {
@@ -204,7 +204,10 @@ async function fetchGetDoorDetailsRequest(idDoor) {
 
     const response = await getResponse(api, "GET", token);
 
-    if (!response.ok) throw new Error("Failed to fetch door details");
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+    }
     return response.json();
 }
 
@@ -218,8 +221,8 @@ async function fetchUpdateDoorRequest(idDoor, position, idAccount) {
     const response = await getResponseWithBody(api, "PATCH", token, body);
 
     if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData);
+        const errorData = await response.json();
+        throw new Error(errorData.message);
     }
     return true;
 }
@@ -235,8 +238,8 @@ async function fetchDeleteDoorRequest(idDoor, idAccount) {
     const response = await getResponseWithBody(api, "DELETE", token, body);
 
     if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData);
+        const errorData = await response.json();
+        throw new Error(errorData.message);
     }
     return true;
 }
@@ -246,8 +249,8 @@ async function fetchTicketsRefDoor(idDoor) {
     const api = `${ref}/ticket/idDoor/${idDoor}`;
     const response = await getResponse(api, "GET", token);
     if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData);
+        const errorData = await response.json();
+        throw new Error(errorData.message);
     }
     return response.json();
 }

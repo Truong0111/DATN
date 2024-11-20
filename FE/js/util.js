@@ -27,7 +27,7 @@ function getAccountId() {
 
 function handleError(message, error) {
     console.error(message, error);
-    alert(message.replace("Error", "Failed"));
+    alert(`${message.replace("Error", "Failed")}${error}`);
 }
 
 function openModal(id) {

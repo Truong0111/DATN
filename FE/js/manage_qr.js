@@ -110,8 +110,8 @@ async function fetchQrCodes() {
     const response = await getResponse(api, "GET", token);
 
     if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData);
+        const errorData = await response.json();
+        throw new Error(errorData.message);
     }
     return response.json();
 }
@@ -122,6 +122,9 @@ async function fetchTokenDetailsRequest(idToken) {
 
     const response = await getResponse(api, "GET", token);
 
-    if (!response.ok) throw new Error("Failed to fetch token details");
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+    }
     return response.json();
 }
