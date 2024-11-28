@@ -29,7 +29,7 @@ async function createTicket(ticketData) {
 
         const accountSnapshot = await accountCollection.doc(ticketData.idAccount).get();
 
-        const doorSnapshot = await accountCollection.doc(ticketData.idDoor).get();
+        const doorSnapshot = await doorCollection.doc(ticketData.idDoor).get();
 
         await ticketRef.set({
             fullName: accountSnapshot.data().firstName + " " + accountSnapshot.data().lastName,
@@ -43,6 +43,8 @@ async function createTicket(ticketData) {
             createdAt: new Date().toISOString(),
             isAccept: false,
         });
+
+
         return true;
     } catch (error) {
         return false;
@@ -73,6 +75,8 @@ async function updateTicket(idTicket, ticketDataUpdate) {
 async function getTicket(idTicket) {
     try {
         const ticketSnapshot = await ticketCollection.doc(idTicket).get();
+        console.log(ticketSnapshot.exists);
+        if (!ticketSnapshot.exists) return []
         return ticketSnapshot.data();
     } catch (error) {
         return null;

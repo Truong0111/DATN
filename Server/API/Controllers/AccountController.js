@@ -28,14 +28,20 @@ module.exports = {
             });
 
             switch (type) {
-                case "client":
+                case "app_manager":
+                    if (role.includes("manager") || role.includes("admin")) {
+                        res.status(200).json({message: "Login successful.", token: jwtToken});
+                    } else {
+                        res.status(403).json({message: "Access denied."});
+                    }
+                    break;
+                case "app_user":
                     res.status(200).json({message: "Login successful.", token: jwtToken});
                     break;
                 case "web":
                     if (role.includes("manager") || role.includes("admin")) {
                         res.status(200).json({message: "Login successful.", token: jwtToken});
-                    }
-                    else{
+                    } else {
                         res.status(403).json({message: "Access denied."});
                     }
                     break;

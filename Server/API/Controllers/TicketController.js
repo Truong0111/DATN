@@ -1,4 +1,5 @@
 const ticketService = require("../../Service/TicketService");
+const {isArrayEmptyOrNull} = require("../../utils");
 
 module.exports = {
     createTicket: async (req, res) => {
@@ -15,7 +16,12 @@ module.exports = {
         const idTicket = req.params.idTicket;
         const ticket = await ticketService.getTicket(idTicket);
         if (ticket) {
-            res.status(200).json(ticket);
+            if (!isArrayEmptyOrNull(ticket)) {
+                res.status(200).json(ticket);
+            }
+            else{
+                res.status(404).json({message: "Ticket not found."});
+            }
         } else {
             res.status(404).json({message: "Ticket not found."});
         }
