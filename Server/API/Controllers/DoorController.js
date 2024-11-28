@@ -6,9 +6,9 @@ module.exports = {
         const doorData = req.body;
         const createSuccess = await doorService.createDoor(doorData);
         if (createSuccess[0]) {
-            res.status(200).send({message: createSuccess[1]});
+            res.status(200).json({message: createSuccess[1]});
         } else {
-            res.status(400).send({message: createSuccess[1]});
+            res.status(400).json({message: createSuccess[1]});
         }
     },
 
@@ -16,9 +16,9 @@ module.exports = {
         const idDoor = req.params.idDoor;
         const doorData = await doorService.getDoor(idDoor);
         if (doorData) {
-            res.status(200).send(doorData);
+            res.status(200).json(doorData);
         } else {
-            res.status(400).send({message: `Door has id ${idDoor} not found.`});
+            res.status(400).json({message: `Door has id ${idDoor} not found.`});
         }
     },
 
@@ -32,9 +32,9 @@ module.exports = {
         );
 
         if (updateSuccess[0]) {
-            res.status(200).send({message: updateSuccess[1]});
+            res.status(200).json({message: updateSuccess[1]});
         } else {
-            res.status(400).send({message: updateSuccess[1]});
+            res.status(400).json({message: updateSuccess[1]});
         }
     },
 
@@ -42,24 +42,25 @@ module.exports = {
         const idDoor = req.params.idDoor;
         const idAccountDelete = req.body.idAccountDelete;
 
-        const deleteSuccess = await Promise.all([
+
+        const deleteSuccess = await Promise.any([
             doorService.deleteDoor(idAccountDelete, idDoor),
             ticketService.deleteTicketRefIdDoor(idDoor),
         ]);
 
         if (deleteSuccess) {
-            res.status(200).send({message: `Delete door ${idDoor} successful.`});
+            res.status(200).json({message: `Delete door ${idDoor} successful.`});
         } else {
-            res.status(400).send({message: `Delete door ${idDoor} failed.`});
+            res.status(400).json({message: `Delete door ${idDoor} failed.`});
         }
     },
 
     getAllDoors: async (req, res) => {
         const doors = await doorService.getAllDoors();
         if (doors) {
-            res.status(200).send(doors);
+            res.status(200).json(doors);
         } else {
-            res.status(404).send({message: "Can't get doors."});
+            res.status(404).json({message: "Can't get doors."});
         }
     },
 };

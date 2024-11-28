@@ -7,7 +7,7 @@ const rtdb = admin.database();
 
 const logCollection = fsdb.collection(constantValue.logsCollection);
 
-const logService = {
+module.exports = {
     createLog,
     getLog,
     deleteLog,

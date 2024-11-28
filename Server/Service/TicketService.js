@@ -4,6 +4,8 @@ const constantValue = require("../constants.json");
 const fsdb = admin.firestore();
 
 const ticketCollection = fsdb.collection(constantValue.ticketsCollection);
+const accountCollection = fsdb.collection(constantValue.accountsCollection);
+const doorCollection = fsdb.collection(constantValue.doorsCollection);
 
 module.exports = {
     createTicket,
@@ -25,7 +27,13 @@ async function createTicket(ticketData) {
             return false;
         }
 
+        const accountSnapshot = await accountCollection.doc(ticketData.idAccount).get();
+
+        const doorSnapshot = await accountCollection.doc(ticketData.idDoor).get();
+
         await ticketRef.set({
+            fullName: accountSnapshot.data().firstName + " " + accountSnapshot.data().lastName,
+            positionDoor: doorSnapshot.data().position,
             idTicket: idTicket,
             idDoor: ticketData.idDoor,
             idAccount: ticketData.idAccount,
@@ -144,7 +152,7 @@ async function deleteTicketRefIdDoor(idDoor) {
 }
 
 function isTicketValid(startTime, endTime) {
-    const timeStart = new Date(startTime).getTime();
-    const timeEnd = new Date(endTime).getTime();
+    const timeStart = new Date(startTime);
+    const timeEnd = new Date(endTime);
     return timeStart <= timeEnd;
 }

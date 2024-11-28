@@ -5,18 +5,18 @@ module.exports = {
         const tokenData = req.body;
         const createToken = await tokenService.createToken(tokenData);
         if (createToken) {
-            res.status(200).send({message: `Create token successfully.`});
+            res.status(200).json({message: `Create token successfully.`});
         } else {
-            res.status(400).send({message: `Created token failed.`});
+            res.status(400).json({message: `Created token failed.`});
         }
     },
     getToken: async (req, res) => {
         const idToken = req.params.idToken;
         const tokenData = await tokenService.getToken(idToken);
         if (tokenData) {
-            res.status(200).send(tokenData);
+            res.status(200).json(tokenData);
         } else {
-            res.status(400).send({message: `Can't get token.`});
+            res.status(400).json({message: `Can't get token.`});
         }
     },
     updateToken: async (req, res) => {
@@ -29,9 +29,9 @@ module.exports = {
         );
 
         if (updateSuccess) {
-            res.status(200).send({message: `Update token successfully.`});
+            res.status(200).json({message: `Update token successfully.`});
         } else {
-            res.status(400).send({message: `Can't update token.`});
+            res.status(400).json({message: `Can't update token.`});
         }
 
     },
@@ -39,27 +39,27 @@ module.exports = {
         const idToken = req.params.idToken;
         const deleteSuccess = await tokenService.deleteToken(idToken);
         if (deleteSuccess) {
-            res.status(200).send({message: `Delete token successfully.`});
+            res.status(200).json({message: `Delete token successfully.`});
         } else {
-            res.status(400).send({message: `Can't delete token.`});
+            res.status(400).json({message: `Can't delete token.`});
         }
     },
     getTokenByUserId: async (req, res) => {
         const idAccount = req.params.idAccount;
         const tokenDatas = await tokenService.getTokenByUserId(idAccount);
         if (tokenDatas) {
-            res.status(200).send(tokenDatas);
+            res.status(200).json(tokenDatas);
         } else {
-            res.status(400).send({message: `Can't get token.`});
+            res.status(400).json({message: `Can't get token.`});
         }
     },
     getTokenByDoorId: async (req, res) => {
         const idDoor = req.params.idDoor;
         const tokenData = await tokenService.getTokenByDoorId(idDoor);
         if (tokenData) {
-            res.status(200).send({tokenData});
+            res.status(200).json({tokenData});
         } else {
-            res.status(400).send({message: `Can't get token.`});
+            res.status(400).json({message: `Can't get token.`});
         }
     },
     getTokenByUserIdAndDoorId: async (req, res) => {
@@ -71,17 +71,17 @@ module.exports = {
         );
 
         if (tokenData) {
-            res.status(200).send({tokenData});
+            res.status(200).json({tokenData});
         } else {
-            res.status(400).send({message: `Can't get token.`});
+            res.status(400).json({message: `Can't get token.`});
         }
     },
     getAllTokens: async (req, res) => {
         const tokens = await tokenService.getAllTokens();
         if (tokens) {
-            res.status(200).send(tokens);
+            res.status(200).json(tokens);
         } else {
-            res.status(400).send({message: `Can't get tokens.`});
+            res.status(400).json({message: `Can't get tokens.`});
         }
     },
     getTicketWithIdTokenFromServer: async (idToken) => {

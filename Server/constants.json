@@ -7,11 +7,19 @@
   "entryLogsCollection": "entryLogs",
   "timeData": {
     "seconds": 0,
-    "minutes": 5,
+    "minutes": 0,
     "hours": 0,
-    "days": 0,
+    "days": 1,
     "months": 0
   },
-
-  "logType": ["account", "door", "ticket"]
+  "logType": [
+    "account",
+    "door",
+    "ticket"
+  ],
+  "typeApp": {
+    "client": "client",
+    "manager": "manager",
+    "web": "web"
+  }
 }

@@ -6,18 +6,18 @@ module.exports = {
 
         const createSuccess = await ticketService.createTicket(ticketData);
         if (createSuccess) {
-            res.status(200).send({message: "Create ticket successful."});
+            res.status(200).json({message: "Create ticket successful."});
         } else {
-            res.status(400).send({message: "Create ticket failed."});
+            res.status(400).json({message: "Create ticket failed."});
         }
     },
     getTicket: async (req, res) => {
         const idTicket = req.params.idTicket;
         const ticket = await ticketService.getTicket(idTicket);
         if (ticket) {
-            res.status(200).send(ticket);
+            res.status(200).json(ticket);
         } else {
-            res.status(404).send({message: "Ticket not found."});
+            res.status(404).json({message: "Ticket not found."});
         }
     },
     updateTicket: async (req, res) => {
@@ -28,27 +28,27 @@ module.exports = {
             ticketDataUpdate
         );
         if (updateSuccess) {
-            res.status(200).send({message: "Update ticket successful."});
+            res.status(200).json({message: "Update ticket successful."});
         } else {
-            res.status(400).send({message: "Update ticket failed."});
+            res.status(400).json({message: "Update ticket failed."});
         }
     },
     deleteTicket: async (req, res) => {
         const idTicket = req.params.idTicket;
         const deleteSuccess = await ticketService.deleteTicket(idTicket);
         if (deleteSuccess) {
-            res.status(200).send({message: "Delete ticket successful."});
+            res.status(200).json({message: "Delete ticket successful."});
         } else {
-            res.status(400).send({message: "Delete ticket failed."});
+            res.status(400).json({message: "Delete ticket failed."});
         }
     },
     getTicketsByIdAccount: async (req, res) => {
         const idAccount = req.params.idAccount;
         const tickets = await ticketService.getTicketsByIdAccount(idAccount);
         if (tickets) {
-            res.status(200).send(tickets);
+            res.status(200).json(tickets);
         } else {
-            res.status(404).send({message: "Cannot get any ticket by id account."});
+            res.status(404).json({message: "Cannot get any ticket by id account."});
         }
     },
 
@@ -56,9 +56,18 @@ module.exports = {
         const idDoor = req.params.idDoor;
         const tickets = await ticketService.getTicketsByIdDoor(idDoor);
         if (tickets) {
-            res.status(200).send(tickets);
+            res.status(200).json(tickets);
         } else {
-            res.status(404).send({message: "Cannot get any ticket by id door."});
+            res.status(404).json({message: "Cannot get any ticket by id door."});
+        }
+    },
+
+    getAllTickets: async (req, res) => {
+        const tickets = await ticketService.getAllTickets();
+        if (tickets) {
+            res.status(200).json(tickets);
+        } else {
+            res.status(404).json({message: "Cannot get any tickets."});
         }
     },
 

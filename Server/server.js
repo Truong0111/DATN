@@ -1,3 +1,5 @@
+const https = require("https");
+const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const express = require("express");
 const cors = require("cors");
@@ -8,6 +10,9 @@ require("./Service/FirebaseService");
 let routes = require("./API/routes");
 const util = require("./utils");
 const {serverFunction} = require("./ServerService");
+
+const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0'
 
 const app = express();
 app.use(bodyParser.urlencoded({extended: true}));
@@ -44,12 +49,18 @@ app.use(function (req, res) {
     res.status(404).send({url: req.originalUrl + " not found"});
 });
 
-let PORT = process.env.PORT || 3000;
+const options = {
+    key: fs.readFileSync("../key/server.key"),
+    cert: fs.readFileSync("../key/server.cert"),
+};
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+https.createServer(options, app).listen(PORT, HOST, () => {
+    console.log(`Secure server running on https://${HOST}:${PORT}`);
 });
 
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+})
 
 // ----- MQTT -----
 // const mqtt = require("mqtt");

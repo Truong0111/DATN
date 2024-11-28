@@ -91,6 +91,7 @@ async function deleteDoor(idAccountDelete, idDoor) {
             idAccountDelete,
             idDoor
         );
+
         if (!isAccountCanDeleteDoor) {
             return false;
         }

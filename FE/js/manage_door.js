@@ -162,7 +162,7 @@ async function deleteDoor(element) {
 //API
 async function fetchDoors() {
     const token = getToken();
-    const api = `${ref}/door/getAllDoors`;
+    const api = `${ref}/door/getAll`;
     const response = await getResponse(api, "GET", token);
 
     if (!response.ok) throw new Error("Failed to fetch doors");

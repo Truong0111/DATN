@@ -1,3 +1,5 @@
+import {Type} from "../constant.js"
+
 document.addEventListener("DOMContentLoaded", () => {
     const loginForm = document.getElementById("login-form");
     const registerForm = document.getElementById("register-form");
@@ -37,11 +39,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const accountValue = {
             username: username,
             password: password,
+            typeApp: Type.WEB,
         }
 
         try {
             toggleLoading(true);
-            const api = `http://localhost:3000/account/login`
+            const api = `${ref}/account/login`
             const response = await fetch(api, {
                     method: "POST",
                     headers: {
@@ -81,7 +84,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
             toggleLoading(true);
-            const response = await fetch("http://localhost:3000/account/register", {
+            const api = `${ref}/account/register`
+            const response = await fetch(api, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
