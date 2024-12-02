@@ -4,6 +4,7 @@
   "ticketsCollection": "tickets",
   "tokensCollection": "tokens",
   "logsCollection": "logs",
+  "ipCollection": "ip",
   "entryLogsCollection": "entryLogs",
   "timeData": {
     "seconds": 0,

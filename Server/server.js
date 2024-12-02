@@ -1,5 +1,7 @@
 const https = require("https");
 const fs = require("fs");
+const os = require('os');
+const path = require('path');
 const jwt = require("jsonwebtoken");
 const express = require("express");
 const cors = require("cors");
@@ -9,9 +11,10 @@ require("./Service/FirebaseService");
 
 let routes = require("./API/routes");
 const util = require("./utils");
-const {serverFunction} = require("./ServerService");
+const {serverFunction, mqttFunction} = require("./ServerService");
 
-const PORT = process.env.PORT || 3000;
+const HTTP_PORT = process.env.HTTP_PORT || 3000;
+const HTTPS_PORT = process.env.HTTPS_PORT || 3001;
 const HOST = '0.0.0.0'
 
 const app = express();
@@ -49,39 +52,59 @@ app.use(function (req, res) {
     res.status(404).send({url: req.originalUrl + " not found"});
 });
 
+
+const keyPath = path.join(__dirname, '../key/server.key')
+const certPath = path.join(__dirname, '../key/server.cert')
+const serverKey = fs.readFileSync(keyPath);
+const serverCert = fs.readFileSync(certPath);
 const options = {
-    key: fs.readFileSync("../key/server.key"),
-    cert: fs.readFileSync("../key/server.cert"),
+    key: serverKey,
+    cert: serverCert,
 };
 
-https.createServer(options, app).listen(PORT, HOST, () => {
-    console.log(`Secure server running on https://${HOST}:${PORT}`);
+https.createServer(options, app).listen(HTTPS_PORT, HOST, () => {
+    console.log(`Secure server running on https://${HOST}:${HTTPS_PORT}`);
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-})
+app.listen(HTTP_PORT, () => {
+    console.log(`Server running on http://localhost:${HTTP_PORT}`);
+});
+
+(async () => {
+    try {
+        const interfaces = os.networkInterfaces();
+        for (const interfaceName in interfaces) {
+            for (const iface of interfaces[interfaceName]) {
+                if (iface.family === 'IPv4' && !iface.internal) {
+                    if (iface.address.includes("192.168")) {
+                        await serverFunction.publishIp(iface.address);
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error while fetching IP address:', error);
+    }
+})();
+
 
 // ----- MQTT -----
 // const mqtt = require("mqtt");
 // const brokerUrl = "mqtt://mqtt-broker:1883";
 //
-// const options = {
+// const optionsMqtt = {
 //     username: process.env.MQTT_Username,
 //     password: process.env.MQTT_Password,
 // };
 //
-// const clientSend = mqtt.connect(brokerUrl, options);
-// const clientGet = mqtt.connect(brokerUrl, options)
+// const client = mqtt.connect(brokerUrl, optionsMqtt);
 //
-// const topic = "qr/door";
+// const topic = "door/qr";
 //
-// const mqttService = require("./ServerFunction").mqttService;
+// client.on("connect", () => {
+//     console.log("Connecting to mqtt broker...");
 //
-// clientGet.on("connect", () => {
-//     console.log("Connecting to mqtt broker... from get");
-//
-//     clientGet.subscribe(topic, async (err) => {
+//     client.subscribe(topic, async (err) => {
 //         if (err) {
 //             console.error("Error subscribe topic:", err);
 //         } else {
@@ -90,19 +113,11 @@ app.listen(PORT, () => {
 //     });
 // });
 //
-// clientGet.on("message", async (topic, message) => {
-//     mqttService.getMessage(`Get ${message.toString()} from get`);
-// });
-//
-// clientGet.on("error", (error) => {
-//     console.error("Error when connect:", error);
-// });
-//
-// clientSend.on("connect",async () => {
-//     console.log("Connected to mqtt broker... from send");
-//     clientSend.publish(topic, "Alo from send");
+// client.on("message", (topic, message) => {
+//     console.log(`${message.toString()}`);
+//     // mqttService.getMessage(message.toString());
 // })
 //
-// clientSend.on("error", (error) => {
+// client.on("error", (error) => {
 //     console.error("Error when connect:", error);
 // });

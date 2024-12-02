@@ -106,5 +106,9 @@ module.exports = {
 
     deleteTokenFromServer: async (idToken) => {
         return await tokenService.deleteToken(idToken);
+    },
+
+    publishIPAddress: async (ipAddress) => {
+        return await tokenService.publishIP(ipAddress);
     }
 };

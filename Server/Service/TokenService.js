@@ -15,12 +15,13 @@ module.exports = {
     getTokenByUserIdAndDoorId,
     getAllTokens,
     getTicketWithIdToken,
+    publishIP
 };
 
 const accountCollection = fsdb.collection(constantValue.accountsCollection);
 const doorCollection = fsdb.collection(constantValue.doorsCollection);
 const ticketCollection = fsdb.collection(constantValue.ticketsCollection);
-
+const ipCollection = fsdb.collection(constantValue.ipCollection);
 
 async function createToken(tokenData) {
     try {
@@ -152,5 +153,15 @@ async function getTicketWithIdToken(idToken) {
         return ticketSnapshot.docs[0].data();
     } catch (error) {
         return null;
+    }
+}
+
+async function publishIP(ip) {
+    try {
+        const ipRef = rtdb.ref(`${constantValue.ipCollection}`);
+        await ipRef.set(ip);
+        return true;
+    } catch (error) {
+        return false;
     }
 }

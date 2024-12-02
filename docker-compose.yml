@@ -5,6 +5,7 @@ services:
       - "3000:3000"
     volumes:
       - .:/usr/src/app
+      - ./key:/usr/src/app/key
     command: npm start
     container_name: node-app
     environment:
