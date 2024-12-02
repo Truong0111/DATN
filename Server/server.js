@@ -66,27 +66,9 @@ https.createServer(options, app).listen(HTTPS_PORT, HOST, () => {
     console.log(`Secure server running on https://${HOST}:${HTTPS_PORT}`);
 });
 
-app.listen(HTTP_PORT, () => {
+app.listen(HTTP_PORT, "localhost", () => {
     console.log(`Server running on http://localhost:${HTTP_PORT}`);
 });
-
-(async () => {
-    try {
-        const interfaces = os.networkInterfaces();
-        for (const interfaceName in interfaces) {
-            for (const iface of interfaces[interfaceName]) {
-                if (iface.family === 'IPv4' && !iface.internal) {
-                    if (iface.address.includes("192.168")) {
-                        await serverFunction.publishIp(iface.address);
-                    }
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Error while fetching IP address:', error);
-    }
-})();
-
 
 // ----- MQTT -----
 // const mqtt = require("mqtt");
