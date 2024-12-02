@@ -27,10 +27,12 @@ async function createDoor(doorData) {
         const doorExist = await isDoorExist(doorData.position);
         if (doorExist) return [false, `Door at ${doorData.position} is exist.`];
 
+        const macAddress = doorData.macAddress;
         const doorRef = doorCollection.doc();
         await doorRef.set({
             idDoor: doorRef.id,
             idAccountCreate: doorData.idAccountCreate,
+            macAddress: macAddress,
             position: doorData.position,
             createdAt: new Date().toISOString(),
             lastUpdate: new Date().toISOString(),

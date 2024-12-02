@@ -7,16 +7,9 @@ services:
     volumes:
       - .:/usr/src/app
       - ./key:/usr/src/app/key
+      - ./.env:/usr/src/app/.env
     command: npm start
     container_name: node-app
-    environment:
-      HTTP_PORT: 3000
-      HTTPS_PORT: 3001
-      JWT_SECRET: "secret"
-      SALT_KEY: "Truongtq204859"
-      SALT_ROUND: 10
-      MQTT_Username: "truongtq"
-      MQTT_Password: "20204859"
     depends_on:
       - mqtt-broker
   mqtt-broker:
@@ -30,3 +23,14 @@ services:
       - ./mosquitto/data:/mosquitto/data:rw
       - ./mosquitto/log:/mosquitto/log:rw
     restart: unless-stopped
+  ngrok:
+    image: ngrok/ngrok
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ./ngrok.yml:/etc/ngrok.yml
+    ports:
+      - "4040:4040"

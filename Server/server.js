@@ -1,11 +1,11 @@
 const https = require("https");
 const fs = require("fs");
-const os = require('os');
 const path = require('path');
 const jwt = require("jsonwebtoken");
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+
 require("dotenv").config({path: "../.env"});
 require("./Service/FirebaseService");
 
@@ -62,13 +62,9 @@ const options = {
     cert: serverCert,
 };
 
-https.createServer(options, app).listen(HTTPS_PORT, HOST, () => {
-    console.log(`Secure server running on https://${HOST}:${HTTPS_PORT}`);
-});
+https.createServer(options, app).listen(HTTPS_PORT, HOST);
 
-app.listen(HTTP_PORT, "localhost", () => {
-    console.log(`Server running on http://localhost:${HTTP_PORT}`);
-});
+app.listen(HTTP_PORT);
 
 // ----- MQTT -----
 // const mqtt = require("mqtt");
