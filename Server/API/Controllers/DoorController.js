@@ -1,14 +1,40 @@
 const doorService = require("../../Service/DoorService");
 const ticketService = require("../../Service/TicketService");
+const {accountService} = require("../../Service/AccountService");
+const {mqttFunction} = require("../../Service/MqttService");
+
 
 module.exports = {
     createDoor: async (req, res) => {
         const doorData = req.body;
         const createSuccess = await doorService.createDoor(doorData);
         if (createSuccess[0]) {
+            mqttFunction.registerDoor(doorData.macAddress, createSuccess[2]);
             res.status(200).json({message: createSuccess[1]});
         } else {
             res.status(400).json({message: createSuccess[1]});
+        }
+    },
+
+    accessDoor: async (req, res) => {
+        const idDoor = req.query.idDoor;
+        const idAccount = req.query.idAccount;
+        const token = req.body.token;
+
+        if (!idDoor || !idAccount) {
+            return res.status(400).json({message: 'Missing idDoor or idAccount'});
+        }
+
+        if (!token) {
+            return res.status(400).json({message: 'Missing token'});
+        }
+
+        const accessSuccess = await doorService.accessDoor(idDoor, idAccount, token);
+        if (accessSuccess[0]) {
+            mqttFunction.accessDoor(accessSuccess[1], idDoor);
+            res.status(200).json({message: "Access granted"});
+        } else {
+            res.status(400).json({message: "You are not allowed to access this door."});
         }
     },
 
@@ -63,4 +89,20 @@ module.exports = {
             res.status(404).json({message: "Can't get doors."});
         }
     },
+
+    updateMacAddress: async (idDoor, macAddress) => {
+        return await doorService.updateMacAddress(idDoor, macAddress);
+    },
+
+    addAccountCanAccess: async (idDoor, idAccount) => {
+        return await doorService.addAccountCanAccess(idDoor, idAccount);
+    },
+
+    removeAccountCanAccess: async (idDoor, idAccount) => {
+        return await doorService.removeAccountCanAccess(idDoor, idAccount);
+    },
+
+    updateDoorStatus: async (idDoor, status) => {
+        return await doorService.updateDoorStatus(idDoor, status);
+    }
 };

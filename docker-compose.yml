@@ -12,7 +12,7 @@ services:
     container_name: node-app
     depends_on:
       - mqtt-broker
-    restart: unless-stopped
+#    restart: always
   mqtt-broker:
     image: eclipse-mosquitto:latest
     container_name: mqtt-broker
@@ -23,7 +23,7 @@ services:
       - ./mosquitto/config:/mosquitto/config:rw
       - ./mosquitto/data:/mosquitto/data:rw
       - ./mosquitto/log:/mosquitto/log:rw
-    restart: unless-stopped
+    restart: always
   ngrok:
     image: ngrok/ngrok
     command:
@@ -35,4 +35,4 @@ services:
       - ./ngrok.yml:/etc/ngrok.yml
     ports:
       - "4040:4040"
-    restart: unless-stopped
+    restart: always

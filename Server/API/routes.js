@@ -1,10 +1,8 @@
-const ticketController = require("./Controllers/TicketController");
+const doorController = require("./Controllers/DoorController");
 module.exports = function (authMiddleware, app) {
     let accountController = require("./Controllers/AccountController");
     let doorController = require("./Controllers/DoorController");
     let ticketController = require("./Controllers/TicketController");
-    let tokenController = require("./Controllers/TokenController");
-    let logController = require("./Controllers/LogController");
 
     app.route("/helloworld").get(async (req, res) => {
         res.status(200).send({message: "Hello world"});
@@ -21,6 +19,9 @@ module.exports = function (authMiddleware, app) {
         .get(authMiddleware, accountController.getAccount)
         .patch(authMiddleware, accountController.updateAccount)
         .delete(authMiddleware, accountController.deleteAccount);
+
+    app
+        .route("/door").post(authMiddleware, doorController.accessDoor)
 
     app.route("/door/create").post(authMiddleware, doorController.createDoor);
 
@@ -53,31 +54,4 @@ module.exports = function (authMiddleware, app) {
 
     app.route("/ticket/idDoor/:idDoor")
         .get(authMiddleware, ticketController.getTicketsByIdDoor);
-
-    app.route("/token/create").post(tokenController.createToken);
-
-    app
-        .route("/token/getTokenByUserId/:idAccount")
-        .get(tokenController.getTokenByUserId);
-
-    app
-        .route("/token/getTokenByDoorId/:idDoor")
-        .get(tokenController.getTokenByDoorId);
-
-    app
-        .route("/token/getTokenByUserIdAndDoorId/:idAccount/:idDoor")
-        .get(tokenController.getTokenByUserIdAndDoorId);
-
-    app
-        .route("/token/:idToken")
-        .get(authMiddleware, tokenController.getToken)
-        .patch(authMiddleware, tokenController.updateToken)
-        .delete(authMiddleware, tokenController.deleteToken);
-
-    app.route("/log/create").post(logController.createLog);
-
-    app
-        .route("/log/:idLog")
-        .get(authMiddleware, logController.getLog)
-        .delete(authMiddleware, logController.deleteLog);
 };

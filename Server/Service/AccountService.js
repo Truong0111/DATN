@@ -27,7 +27,6 @@ async function registerAccount(accountData) {
             email: accountData.email,
             phoneNumber: accountData.phoneNumber,
             password: hashPassword,
-            arrDoor: [],
             role: ["user"],
         });
         return true;
@@ -48,7 +47,6 @@ async function registerAccountManager(accountData) {
             email: accountData.email,
             phoneNumber: accountData.phoneNumber,
             password: hashPassword,
-            arrDoor: [],
             role: ["user", "manager"],
         });
         return true;
@@ -69,7 +67,6 @@ async function registerAccountAdmin(accountData) {
             email: accountData.email,
             phoneNumber: accountData.phoneNumber,
             password: hashPassword,
-            arrDoor: [],
             role: ["user", "manager", "admin"],
         });
         return true;

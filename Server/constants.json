@@ -4,13 +4,16 @@
   "ticketsCollection": "tickets",
   "tokensCollection": "tokens",
   "logsCollection": "logs",
-  "ipCollection": "ip",
   "entryLogsCollection": "entryLogs",
+  "doorStatus": {
+    "open": "open",
+    "close": "close"
+  },
   "timeData": {
-    "seconds": 0,
+    "seconds": 10,
     "minutes": 0,
     "hours": 0,
-    "days": 1,
+    "days": 0,
     "months": 0
   },
   "logType": [

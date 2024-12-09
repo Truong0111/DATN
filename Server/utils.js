@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const constantValue = require("./constants.json");
+const {v4: uuidv4} = require('uuid');
 require("dotenv").config();
 
 module.exports = {
@@ -25,4 +26,7 @@ module.exports = {
             timeData.days * msPerDay +
             timeData.months * msPerMonth;
     },
+    generateToken: () => {
+        return uuidv4();
+    }
 }
