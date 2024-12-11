@@ -60,7 +60,7 @@ async function checkToken(idDoor, token) {
             return [true, currentToken];
         }
     } catch (error) {
-        return [false];
+        return [false, null];
     }
 }
 
