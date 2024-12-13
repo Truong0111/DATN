@@ -4,7 +4,6 @@
   "doorsAccessCollection": "doorsAccess",
   "ticketsCollection": "tickets",
   "tokensCollection": "tokens",
-  "logsCollection": "logs",
   "requestsCollection": "requests",
   "doorStatus": {
     "open": "open",
@@ -29,14 +28,7 @@
     "DoorService": "doorService",
     "TokenService": "tokenService",
     "ServerService": "serverService",
-    "LogService": "logService",
     "MqttService": "mqttService"
-  },
-  "levelLog": {
-    "LOG_INFO": "log_info",
-    "LOG_ERROR": "Log_error",
-    "LOG_WARNING": "log_warning",
-    "LOG_DEBUG": "log_debug"
   },
   "roleToCheck": [
     "manager",

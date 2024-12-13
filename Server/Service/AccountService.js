@@ -2,8 +2,6 @@ const admin = require("firebase-admin");
 const util = require("../utils");
 const constantValue = require("../constants.json");
 
-const logService = require("./LogService");
-
 const fsdb = admin.firestore();
 
 const accountCollection = fsdb.collection(constantValue.accountsCollection);
@@ -37,26 +35,8 @@ async function registerAccount(accountData) {
             role: ["user"],
         });
 
-        await logService.createLogNormal(
-            constantValue.levelLog.LOG_INFO,
-            constantValue.services.AccountService,
-            `Register account successful. Email: ${accountData.email}`,
-            {
-                action: "Register account",
-            }
-        );
-
         return [true, "Register account successfully"];
     } catch (error) {
-        await logService.createLogNormal(
-            constantValue.levelLog.LOG_INFO,
-            constantValue.services.AccountService,
-            `Register account failed. Email: ${accountData.email}, RefId: ${accountData.refId}, PhoneNumber: ${accountData.phoneNumber}`,
-            {
-                action: "Register account",
-            }
-        );
-
         return [false, "Server error!"];
     }
 }
@@ -78,17 +58,7 @@ async function loginAccount(username, password) {
 
 
         if (!userSnapshot.empty) {
-            const userData = userSnapshot.docs[0].data();
-            await logService.createLog(
-                constantValue.levelLog.LOG_INFO,
-                constantValue.services.AccountService,
-                `Login successful: Email: ${userData.email}; Role: ${userData.role}`,
-                {
-                    action: "Login account",
-                }
-            );
-
-            return userData;
+            return userSnapshot.docs[0].data();
         } else {
             return false;
         }

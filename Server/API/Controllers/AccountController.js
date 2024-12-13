@@ -3,7 +3,6 @@ const constantValue = require("../../constants.json");
 require("dotenv").config({path: "../.env"});
 
 const accountService = require("../../Service/AccountService");
-const logService = require("../../Service/LogService");
 
 module.exports = {
     registerAccount: async (req, res) => {
@@ -33,55 +32,19 @@ module.exports = {
             switch (type) {
                 case "app_manager" || "web":
                     if (role.includes("manager") || role.includes("admin")) {
-                        await logService.createLogNormal(
-                            constantValue.levelLog.LOG_INFO,
-                            constantValue.services.AccountService,
-                            `Login successful: Email: ${userData.email}; Role: ${userData.role}; Type app: ${type}`,
-                            {
-                                action: "Login account",
-                            });
                         res.status(200).json({message: "Login successful.", token: jwtToken});
                     } else {
-                        await logService.createLogNormal(
-                            constantValue.levelLog.LOG_INFO,
-                            constantValue.services.AccountService,
-                            `Access denied: Email: ${userData.email}; Role: ${userData.role}; Type app: ${type}`,
-                            {
-                                action: "Login account",
-                            });
                         res.status(403).json({message: "Access denied."});
                     }
                     break;
                 case "app_user":
-                    await logService.createLogNormal(
-                        constantValue.levelLog.LOG_INFO,
-                        constantValue.services.AccountService,
-                        `Login successful: Email: ${userData.email}; Role: ${userData.role}; Type app: ${type}`,
-                        {
-                            action: "Login account",
-                        });
                     res.status(200).json({message: "Login successful.", token: jwtToken});
                     break;
                 default:
-                    await logService.createLogNormal(
-                        constantValue.levelLog.LOG_INFO,
-                        constantValue.services.AccountService,
-                        `Access denied: Email: ${userData.email}; Role: ${userData.role}; Type app: ${type}`,
-                        {
-                            action: "Login account",
-                        });
                     res.status(403).json({message: "Access denied."});
                     break;
             }
         } else {
-            await logService.createLogNormal(
-                constantValue.levelLog.LOG_INFO,
-                constantValue.services.AccountService,
-                `Login failed: Email: ${userData.email}; Role: ${userData.role}; Type app: ${type}`,
-                {
-                    action: "Login account",
-                    failureMessage: "Invalid username or password.",
-                });
             res.status(401).json({message: "Invalid username or password."});
         }
     },

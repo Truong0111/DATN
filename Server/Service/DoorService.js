@@ -1,7 +1,6 @@
 const admin = require("firebase-admin");
 const constantValue = require("../constants.json");
 const {FieldValue} = require('firebase-admin/firestore');
-const logService = require("./LogService");
 
 const fsdb = admin.firestore();
 const rtdb = admin.database();
@@ -52,15 +51,6 @@ async function createDoor(doorData) {
             idAccountsCanAccess: [doorData.idAccountCreate],
         })
 
-        await logService.createLogNormal(
-            constantValue.levelLog.LOG_INFO,
-            constantValue.services.DoorService,
-            `Create new door at position: ${doorData.position}`,
-            {
-                action: "Create door",
-            }
-        );
-
         return [true, `Door at ${doorData.position} create successfully.`, doorRef.id];
     } catch (error) {
         return [false, `Has error when creating door.`];
@@ -87,15 +77,6 @@ async function updateDoor(idDoor, doorDataUpdate) {
 
         doorDataUpdate.lastUpdate = new Date().toISOString();
         await doorCollection.doc(idDoor).update(doorDataUpdate);
-
-        await logService.createLogNormal(
-            constantValue.levelLog.LOG_INFO,
-            constantValue.services.DoorService,
-            `Update door position: ${doorDataUpdate.position}`,
-            {
-                action: "Update door",
-            }
-        );
 
         return [true, `Door is changed from ${oldPosition} to ${doorDataUpdate.position}`];
 
@@ -133,18 +114,7 @@ async function deleteDoor(idAccountDelete, idDoor) {
             return false;
         }
 
-        const doorRef = await doorCollection.doc(idDoor);
-
-        await logService.createLogNormal(
-            constantValue.levelLog.LOG_INFO,
-            constantValue.services.DoorService,
-            `Delete door position: ${(await doorRef.get()).data().position}`,
-            {
-                action: "Delete door",
-            }
-        );
-
-        await doorRef.delete();
+        await doorCollection.doc(idDoor).delete();
 
         return true;
 
@@ -211,15 +181,6 @@ async function accessDoor(idDoor, idAccount, token) {
         const isAccountCanAccess = await isAccountCanAccessDoor(idDoor, idAccount);
         const tokenValue = await rtdb.ref(`${constantValue.tokensCollection}/${idDoor}`).once("value");
         const isCorrectToken = tokenValue.val().value === token;
-
-        await logService.createLogNormal(
-            constantValue.levelLog.LOG_INFO,
-            constantValue.services.DoorService,
-            `Access door ${door.position} by ${idAccount}`,
-            {
-                action: "Access door",
-            }
-        );
 
         return [isAccountCanAccess && isCorrectToken, door.macAddress];
     } catch (error) {
