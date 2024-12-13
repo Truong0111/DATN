@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const constantValue = require("../constants.json");
+const logService = require("./LogService");
 
 const fsdb = admin.firestore();
 
@@ -10,6 +11,7 @@ const doorCollection = fsdb.collection(constantValue.doorsCollection);
 module.exports = {
     createTicket,
     updateTicket,
+    acceptTicket,
     getTicket,
     getTicketsByIdAccount,
     getTicketsByIdDoor,
@@ -44,6 +46,56 @@ async function createTicket(ticketData) {
             isAccept: false,
         });
 
+        await logService.createLogNormal(
+            constantValue.levelLog.LOG_INFO,
+            constantValue.services.TicketService,
+            `Create ticket by ${ticketData.idAccount} for door ${doorSnapshot.data().position}`,
+            {
+                action: "Create ticket",
+            }
+        );
+
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+async function acceptTicket(idTicket, idAccountAccept) {
+    try {
+        await ticketCollection.doc(idTicket).update({
+            isAccept: true,
+        });
+
+        await logService.createLogNormal(
+            constantValue.levelLog.LOG_INFO,
+            constantValue.services.TicketService,
+            `Accept ticket with id ${idTicket} by ${idAccountAccept}`,
+            {
+                action: "Accept ticket",
+            }
+        );
+
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+async function rejectTicket(idTicket, idAccountReject) {
+    try {
+        await ticketCollection.doc(idTicket).update({
+            isAccept: false,
+        });
+
+        await logService.createLogNormal(
+            constantValue.levelLog.LOG_INFO,
+            constantValue.services.TicketService,
+            `Reject ticket with id ${idTicket} by ${idAccountReject}`,
+            {
+                action: "Reject ticket",
+            }
+        );
 
         return true;
     } catch (error) {
@@ -117,6 +169,16 @@ async function getAllTickets() {
 async function deleteTicket(idTicket) {
     try {
         await ticketCollection.doc(idTicket).delete();
+
+        await logService.createLogNormal(
+            constantValue.levelLog.LOG_INFO,
+            constantValue.services.TicketService,
+            `Delete ticket with id ${idTicket}`,
+            {
+                action: "Delete ticket",
+            }
+        );
+
         return true;
     } catch (error) {
         return false;

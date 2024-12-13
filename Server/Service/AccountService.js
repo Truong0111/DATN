@@ -1,6 +1,8 @@
 const admin = require("firebase-admin");
-const constantValue = require("../constants.json");
 const util = require("../utils");
+const constantValue = require("../constants.json");
+
+const logService = require("./LogService");
 
 const fsdb = admin.firestore();
 
@@ -15,8 +17,13 @@ module.exports = {
     getAllAccounts,
 }
 
+
 async function registerAccount(accountData) {
     try {
+        if (await isEmailExist(accountData.email)) return [false, "Email already exists"];
+        if (await isRefIdExist(accountData.refId)) return [false, "ID already exists"];
+        if (await isPhoneNumberExist(accountData.phoneNumber)) return [false, "Phone number already exists"];
+
         const accountRef = accountCollection.doc();
         const hashPassword = await util.hashPassword(accountData.password);
         await accountRef.set({
@@ -29,49 +36,28 @@ async function registerAccount(accountData) {
             password: hashPassword,
             role: ["user"],
         });
-        return true;
-    } catch (error) {
-        return false;
-    }
-}
 
-async function registerAccountManager(accountData) {
-    try {
-        const accountRef = accountCollection.doc();
-        const hashPassword = await util.hashPassword(accountData.password);
-        await accountRef.set({
-            idAccount: accountRef.id,
-            firstName: accountData.firstName,
-            lastName: accountData.lastName,
-            refId: accountData.refId,
-            email: accountData.email,
-            phoneNumber: accountData.phoneNumber,
-            password: hashPassword,
-            role: ["user", "manager"],
-        });
-        return true;
-    } catch (error) {
-        return false;
-    }
-}
+        await logService.createLogNormal(
+            constantValue.levelLog.LOG_INFO,
+            constantValue.services.AccountService,
+            `Register account successful. Email: ${accountData.email}`,
+            {
+                action: "Register account",
+            }
+        );
 
-async function registerAccountAdmin(accountData) {
-    try {
-        const accountRef = accountCollection.doc();
-        const hashPassword = await util.hashPassword(accountData.password);
-        await accountRef.set({
-            idAccount: accountRef.id,
-            firstName: accountData.firstName,
-            lastName: accountData.lastName,
-            refId: accountData.refId,
-            email: accountData.email,
-            phoneNumber: accountData.phoneNumber,
-            password: hashPassword,
-            role: ["user", "manager", "admin"],
-        });
-        return true;
+        return [true, "Register account successfully"];
     } catch (error) {
-        return false;
+        await logService.createLogNormal(
+            constantValue.levelLog.LOG_INFO,
+            constantValue.services.AccountService,
+            `Register account failed. Email: ${accountData.email}, RefId: ${accountData.refId}, PhoneNumber: ${accountData.phoneNumber}`,
+            {
+                action: "Register account",
+            }
+        );
+
+        return [false, "Server error!"];
     }
 }
 
@@ -90,8 +76,19 @@ async function loginAccount(username, password) {
                 .get();
         }
 
+
         if (!userSnapshot.empty) {
-            return userSnapshot.docs[0].data();
+            const userData = userSnapshot.docs[0].data();
+            await logService.createLog(
+                constantValue.levelLog.LOG_INFO,
+                constantValue.services.AccountService,
+                `Login successful: Email: ${userData.email}; Role: ${userData.role}`,
+                {
+                    action: "Login account",
+                }
+            );
+
+            return userData;
         } else {
             return false;
         }
@@ -141,4 +138,28 @@ async function deleteAccount(idAccountDelete) {
     } catch (error) {
         return false;
     }
+}
+
+async function isEmailExist(email) {
+    const userSnapshot = await accountCollection
+        .where("email", "==", email)
+        .get();
+
+    return !userSnapshot.empty;
+}
+
+async function isRefIdExist(refId) {
+    const userSnapshot = await accountCollection
+        .where("refId", "==", refId)
+        .get();
+
+    return !userSnapshot.empty;
+}
+
+async function isPhoneNumberExist(phoneNumber) {
+    const userSnapshot = await accountCollection
+        .where("phoneNumber", "==", phoneNumber)
+        .get();
+
+    return !userSnapshot.empty;
 }

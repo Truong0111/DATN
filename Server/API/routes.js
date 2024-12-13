@@ -1,4 +1,5 @@
 const doorController = require("./Controllers/DoorController");
+
 module.exports = function (authMiddleware, app) {
     let accountController = require("./Controllers/AccountController");
     let doorController = require("./Controllers/DoorController");
@@ -17,11 +18,11 @@ module.exports = function (authMiddleware, app) {
     app
         .route("/account/:idAccount")
         .get(authMiddleware, accountController.getAccount)
-        .patch(authMiddleware, accountController.updateAccount)
-        .delete(authMiddleware, accountController.deleteAccount);
+        .patch(authMiddleware, accountController.updateAccount);
+        // .delete(authMiddleware, accountController.deleteAccount);
 
     app
-        .route("/door").post(authMiddleware, doorController.accessDoor)
+        .route("/door").post(authMiddleware, doorController.accessDoor);
 
     app.route("/door/create").post(authMiddleware, doorController.createDoor);
 

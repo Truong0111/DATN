@@ -21,7 +21,7 @@ const serverFunction = {
                 continue;
             }
 
-            const accountExists = await doorService.isDoorContainsIdAccount(ticket.idDoor, ticket.idAccount);
+            const accountExists = await doorService.isAccountCanAccessDoor(ticket.idDoor, ticket.idAccount);
 
             if (ticket.isAccept && !accountExists) {
                 await doorService.addAccountCanAccess(ticket.idDoor, ticket.idAccount);

@@ -26,6 +26,15 @@ module.exports = {
             res.status(404).json({message: "Ticket not found."});
         }
     },
+    acceptTicket: async (req, res) => {
+        const idTicket = req.params.idTicket;
+        const acceptSuccess = await ticketService.acceptTicket(idTicket);
+        if (acceptSuccess) {
+            res.status(200).json({message: "Accept ticket successful."});
+        } else {
+            res.status(400).json({message: "Accept ticket failed."});
+        }
+    },
     updateTicket: async (req, res) => {
         const idTicket = req.params.idTicket;
         const ticketDataUpdate = req.body;
