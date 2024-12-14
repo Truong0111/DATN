@@ -1,8 +1,7 @@
 const doorService = require("../Service/DoorService");
 const tokenService = require("../Service/TokenService");
-const constantValue = require("../constants.json");
-const util = require("../utils");
 const EventEmitter = require("events");
+const logger = require("../winston");
 
 class MqttEmitter extends EventEmitter {
 }
@@ -11,7 +10,7 @@ const mqttEmitter = new MqttEmitter();
 
 const mqttFunction = {
     listenMessages: async (message) => {
-        console.log(`Received message: ${message}`);
+        logger.info(`Received message from broker: ${message}`);
         try {
             const parts = message.split("::");
 
@@ -21,10 +20,10 @@ const mqttFunction = {
                         const macAddress = parts[2];
                         const idDoor = parts[3];
                         if (macAddress && idDoor) {
+                            logger.info(`Request update MAC: ${macAddress} for Door ID: ${idDoor}`);
                             await doorService.updateMacAddress(idDoor, macAddress);
-                            console.log(`Updated MAC: ${macAddress} for Door ID: ${idDoor}`);
                         } else {
-                            console.warn("Invalid UPDATE_MAC payload");
+                            logger.debug("Invalid UPDATE_MAC payload");
                         }
                         break;
                     }
@@ -32,6 +31,7 @@ const mqttFunction = {
                         const macAddress = parts[2];
                         const idDoor = parts[3];
                         if (macAddress && idDoor) {
+                            logger.info(`Request check token for door ${idDoor}`);
                             const checkTokenResponse = await tokenService.checkToken(idDoor, macAddress);
                             if (checkTokenResponse[0]) {
                                 const message = `SERVER::UPDATE_TOKEN::${macAddress}::${idDoor}::${checkTokenResponse[1]}`;
@@ -44,22 +44,22 @@ const mqttFunction = {
                                 mqttEmitter.emit("publish", message);
                             }
                         } else {
-                            console.warn("Invalid CHECK_TOKEN payload");
+                            logger.warn("Invalid CHECK_TOKEN payload");
                         }
                         break;
                     }
                     default:
-                        console.warn("Unknown command from ESP");
+                        logger.warn("Unknown command from ESP");
                 }
             }
         } catch (error) {
-            console.error("Error processing message:", error);
+            logger.error("Error processing message:", error);
         }
     },
 
     updateToken: (macAddress, idDoor, token) => {
         if (!macAddress || !idDoor || !token) {
-            console.error("Invalid parameters for update token");
+            logger.error("Invalid parameters for update token");
             return;
         }
 
@@ -69,7 +69,7 @@ const mqttFunction = {
 
     registerDoor: (macAddress, idDoor) => {
         if (!macAddress || !idDoor) {
-            console.error("Invalid parameters for register door");
+            logger.error("Invalid parameters for register door");
             return;
         }
 
@@ -79,7 +79,7 @@ const mqttFunction = {
 
     accessDoor: (macAddress, idDoor) => {
         if (!macAddress || !idDoor) {
-            console.error("Invalid parameters for access door");
+            logger.error("Invalid parameters for access door");
             return;
         }
 

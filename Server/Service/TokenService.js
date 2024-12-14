@@ -1,6 +1,6 @@
 const admin = require("firebase-admin");
 const constantValue = require("../constants.json");
-
+const logger = require("../winston");
 const rtdb = admin.database();
 
 
@@ -21,8 +21,10 @@ async function createToken(idDoor, token, timeStamp) {
             value: token,
             timeStamp: timeStamp,
         });
+        logger.info(`Create new token for door ${idDoor}`, {token: token});
         return true;
     } catch (error) {
+        logger.error(`Error when creating new token for door ${idDoor}`);
         return false;
     }
 }
@@ -33,11 +35,16 @@ async function getToken(idDoor) {
         const snapshot = await tokenRef.once("value");
 
         if (!snapshot.exists()) {
+            logger.warn(`No token found for ${idDoor}`);
             return false;
         }
 
+        logger.info(`Get token for ${idDoor}`, {token: snapshot.val()});
+
         return snapshot.val();
     } catch (error) {
+
+        logger.error(`Error when getting token for ${idDoor}`);
         return false;
     }
 }
@@ -48,18 +55,22 @@ async function checkToken(idDoor, token) {
         const snapshot = await tokenRef.once("value");
 
         if (!snapshot.exists()) {
+            logger.warn(`No token found for ${idDoor}`);
             return [false, null];
         }
 
         const currentToken = snapshot.val().value;
 
         if(currentToken === token){
+            logger.info(`Token ${token} is correct for ${idDoor}`, {checkToken: token, currentToken: currentToken});
             return [false, currentToken];
         }
         else{
+            logger.info(`Token ${token} is incorrect for ${idDoor}`, {checkToken: token, currentToken: currentToken});
             return [true, currentToken];
         }
     } catch (error) {
+        logger.error(`Error when checking token for ${idDoor}`);
         return [false, null];
     }
 }
@@ -73,8 +84,12 @@ async function updateToken(idDoor, token, timeStamp) {
             timeStamp: timeStamp
         });
 
+        logger.info(`Update token for ${idDoor}`, {token: token});
+
         return true;
     } catch (error) {
+
+        logger.error(`Error when updating token for ${idDoor}`);
         return false;
     }
 }
@@ -83,8 +98,10 @@ async function deleteToken(idDoor) {
     try {
         const tokenRef = rtdb.ref(`${constantValue.tokensCollection}/${idDoor}`);
         await tokenRef.remove();
+        logger.info(`Delete token for ${idDoor}`);
         return true;
     } catch (error) {
+        logger.error(`Error when deleting token for ${idDoor}`);
         return false;
     }
 }
@@ -93,8 +110,10 @@ async function getAllTokens() {
     try {
         const tokensRef = rtdb.ref(constantValue.tokensCollection);
         const snapshot = await tokensRef.once("value");
+        logger.info(`Get all tokens`);
         return snapshot.val();
     } catch (error) {
+        logger.error(`Error when getting all tokens`);
         return null;
     }
 }

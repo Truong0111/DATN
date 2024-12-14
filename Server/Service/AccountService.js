@@ -1,6 +1,7 @@
 const admin = require("firebase-admin");
 const util = require("../utils");
 const constantValue = require("../constants.json");
+const logger = require("../winston");
 
 const fsdb = admin.firestore();
 
@@ -18,9 +19,18 @@ module.exports = {
 
 async function registerAccount(accountData) {
     try {
-        if (await isEmailExist(accountData.email)) return [false, "Email already exists"];
-        if (await isRefIdExist(accountData.refId)) return [false, "ID already exists"];
-        if (await isPhoneNumberExist(accountData.phoneNumber)) return [false, "Phone number already exists"];
+        if (await isEmailExist(accountData.email)) {
+            logger.info(`Register failed: Email already exists ${accountData.email}`);
+            return [false, "Email already exists"];
+        }
+        if (await isRefIdExist(accountData.refId)) {
+            logger.info(`Register failed: Ref Id already exists ${accountData.refId}`);
+            return [false, "ID already exists"];
+        }
+        if (await isPhoneNumberExist(accountData.phoneNumber)) {
+            logger.info(`Register failed: Phone number already exists ${accountData.phoneNumber}`);
+            return [false, "Phone number already exists"];
+        }
 
         const accountRef = accountCollection.doc();
         const hashPassword = await util.hashPassword(accountData.password);
@@ -35,8 +45,10 @@ async function registerAccount(accountData) {
             role: ["user"],
         });
 
+        logger.info(`Register new account: ${accountRef.id}`)
         return [true, "Register account successfully"];
     } catch (error) {
+        logger.error(`Error registering account: ${error.message}`)
         return [false, "Server error!"];
     }
 }
@@ -58,11 +70,14 @@ async function loginAccount(username, password) {
 
 
         if (!userSnapshot.empty) {
+            logger.info(`Login request: ${userSnapshot.docs[0].id}`);
             return userSnapshot.docs[0].data();
         } else {
+            logger.info(`Login request failed username: ${username}`);
             return false;
         }
     } catch (error) {
+        logger.error(`Error login request: ${error.message}`);
         return false;
     }
 }
@@ -77,8 +92,13 @@ async function updateAccount(idAccount, accountDataUpdate) {
         }
 
         await accountCollection.doc(idAccount).update(dataToUpdate);
+
+        logger.info(`Update account: ${idAccount}`)
+
         return true;
     } catch (error) {
+
+        logger.error(`Error updating account: ${error.message}`)
         return false;
     }
 }
@@ -86,8 +106,11 @@ async function updateAccount(idAccount, accountDataUpdate) {
 async function getAccount(idAccount) {
     try {
         const accountSnapshot = await accountCollection.doc(idAccount).get();
+
+        logger.info(`Get account: ${idAccount}`);
         return accountSnapshot.data();
     } catch (error) {
+        logger.error(`Error getting account: ${error}`);
         return null;
     }
 }
@@ -95,8 +118,10 @@ async function getAccount(idAccount) {
 async function getAllAccounts() {
     try {
         const accountsSnapshot = await accountCollection.get();
+        logger.info(`Get all accounts`);
         return accountsSnapshot.docs.map((doc) => doc.data());
     } catch (error) {
+        logger.error(`Error getting all accounts: ${error}`);
         return [];
     }
 }
@@ -104,8 +129,10 @@ async function getAllAccounts() {
 async function deleteAccount(idAccountDelete) {
     try {
         await accountCollection.doc(idAccountDelete).delete();
+        logger.info(`Delete account: ${idAccountDelete}`);
         return true;
     } catch (error) {
+        logger.error(`Error deleting account: ${error}`);
         return false;
     }
 }
