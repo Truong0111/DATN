@@ -18,9 +18,9 @@ client.on("connect", () => {
 
     client.subscribe(topic, async (err) => {
         if (err) {
-            logger.error("Error subscribe topic:", err);
+            logger.error("Error subscribe topic",{error: err});
         } else {
-            logger.info("Subscribe topic:", topic);
+            logger.info(`Subscribe topic: ${topic}`);
         }
     });
 });
