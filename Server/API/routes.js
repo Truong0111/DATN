@@ -9,6 +9,8 @@ module.exports = function (authMiddleware, app) {
         res.status(200).send({message: "Hello world"});
     });
 
+    app.route("/account/loginBiometric").post(accountController.loginBiometric);
+
     app.route("/account/login").post(accountController.loginAccount);
 
     app.route("/account/register").post(accountController.registerAccount);

@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const logger = require("./winston")
+const logger = require("./winston");
 
 require("dotenv").config({path: "../.env"});
 require("./Service/FirebaseService");
@@ -15,6 +15,7 @@ const {serverFunction} = require("./Service/ServerService");
 const HTTP_PORT = process.env.HTTP_PORT || 3000;
 
 const app = express();
+app.set('trust proxy', true);
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(cors());

@@ -17,6 +17,23 @@ module.exports = {
         }
     },
 
+    loginBiometric: async (req, res) => {
+        const idAccount = req.body.idAccount;
+        const type = req.body.typeApp;
+        logger.info(`Request: login account from ${req.ip}`);
+
+        const jwtToken = jwt.sign({idAccount}, process.env.JWT_SECRET, {
+            expiresIn: "24h",
+        });
+        if (jwtToken) {
+            logger.info(`Response: Login successful on app ${type} for ${req.ip}`);
+            res.status(200).json({message: "Login successful.", token: jwtToken});
+        } else {
+            res.status(401).json({message: "Invalid biometric data."});
+        }
+
+    },
+
     loginAccount: async (req, res) => {
         const username = req.body.username;
         const password = req.body.password;
