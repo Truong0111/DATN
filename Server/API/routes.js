@@ -28,6 +28,8 @@ module.exports = function (authMiddleware, app) {
 
     app.route("/door/create").post(authMiddleware, doorController.createDoor);
 
+    app.route("/door/addAccountAccessDoor").post(authMiddleware, doorController.addAccountAccessDoor);
+
     app
         .route("/door/getAll")
         .get(authMiddleware, doorController.getAllDoors);

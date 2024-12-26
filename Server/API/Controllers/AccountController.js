@@ -50,7 +50,7 @@ module.exports = {
             });
 
             switch (type) {
-                case "app_manager" || "web":
+                case "app_manager":
                     if (role.includes("manager") || role.includes("admin")) {
                         logger.info(`Response: Login successful on app ${type} as ${role} for ${req.ip}`);
                         res.status(200).json({message: "Login successful.", token: jwtToken});
@@ -62,6 +62,15 @@ module.exports = {
                 case "app_user":
                     logger.info(`Response: Login successful on app ${type} as ${role} for ${req.ip}`);
                     res.status(200).json({message: "Login successful.", token: jwtToken});
+                    break;
+                case "web":
+                    if (role.includes("manager") || role.includes("admin")) {
+                        logger.info(`Response: Login successful on app ${type} as ${role} for ${req.ip}`);
+                        res.status(200).json({message: "Login successful.", token: jwtToken});
+                    } else {
+                        logger.info(`Response: Login failed on app ${type} as ${role} for ${req.ip}`);
+                        res.status(403).json({message: "Access denied."});
+                    }
                     break;
                 default:
                     logger.warn(`Response: Login failed on app ${type} for ${req.ip}`);

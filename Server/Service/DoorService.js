@@ -18,11 +18,14 @@ module.exports = {
     getAllDoors,
     updateMacAddress,
     updateDoorStatus,
-
+    getIdDoor,
     accessDoor,
     addAccountCanAccess,
     removeAccountCanAccess,
     isAccountCanAccessDoor,
+    registerRfid,
+    removeRfid,
+    addAccountsAccessDoor,
 };
 
 async function createDoor(doorData) {
@@ -130,6 +133,8 @@ async function deleteDoor(idAccountDelete, idDoor) {
         }
 
         await doorCollection.doc(idDoor).delete();
+        await doorAccessCollection.doc(idDoor).delete();
+
         logger.info(`Door ${idDoor} deleted by ${idAccountDelete}`);
         return true;
 
@@ -189,7 +194,86 @@ async function isCanUpdateOrDeleteDoor(idAccount, idDoor) {
     return !doorSnapShot.empty;
 }
 
+async function getIdDoor(macAddress) {
+    const doorSnapshot = await doorCollection
+        .where("macAddress", "==", macAddress)
+        .get();
+
+    if (doorSnapshot.empty) {
+        logger.warn(`Door with mac address ${macAddress} is not exist`);
+        return null;
+    }
+
+    return doorSnapshot.docs[0].id;
+}
+
 // Door Access Functions
+async function registerRfid(macAddress, uid) {
+    try {
+        const doorSnapshot = await doorCollection
+            .where("macAddress", "==", macAddress)
+            .get();
+
+        const idDoor = doorSnapshot.docs[0].id
+
+        await doorAccessCollection.doc(idDoor).update({
+            rfidCanAccess: FieldValue.arrayUnion(uid),
+        });
+        logger.info(`Add rfid ${uid} can access door ${idDoor}`);
+        return true;
+    } catch (error) {
+        logger.error(`Error when add rfid ${uid} can access door ${macAddress}`);
+        return false;
+    }
+}
+
+async function removeRfid(macAddress, uid) {
+    try {
+        const doorSnapshot = await doorCollection
+            .where("macAddress", "==", macAddress)
+            .get();
+
+        const idDoor = doorSnapshot.docs[0].id
+
+        await doorAccessCollection.doc(idDoor).update({
+            rfidCanAccess: FieldValue.arrayRemove(uid),
+        });
+
+        logger.info(`Remove rfid ${uid} can access door ${idDoor}`);
+        return true;
+    } catch (error) {
+        logger.error(`Error when remove rfid ${uid} can access door ${macAddress}`);
+        return false;
+    }
+}
+
+async function addAccountsAccessDoor(idDoor, idAccounts) {
+    const failedAccounts = [];
+
+    try {
+        for (const idAccount of idAccounts) {
+            try {
+                await addAccountCanAccess(idDoor, idAccount);
+            } catch (error) {
+                logger.error(`Failed to add account ${idAccount} to door ${idDoor}: ${error.message}`);
+                failedAccounts.push(idAccount);
+            }
+        }
+
+        if (failedAccounts.length > 0) {
+            logger.warn(`Some accounts failed to be added to door ${idDoor}: ${failedAccounts.join(', ')}`);
+        } else {
+            logger.info(`Add all accounts can access door ${idDoor} successfully`);
+        }
+
+        return { success: failedAccounts.length === 0, failedAccounts };
+    } catch (error) {
+        logger.error(`Error when processing accounts for door ${idDoor}: ${error.message}`);
+        return { success: false, failedAccounts: idAccounts };
+    }
+}
+
+
 async function accessDoor(idDoor, idAccount, token) {
     try {
         const door = await getDoor(idDoor);

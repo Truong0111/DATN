@@ -48,6 +48,39 @@ const mqttFunction = {
                         }
                         break;
                     }
+                    case "ACCESS_DOOR": {
+                        const type = parts[2];
+                        const isAccess = parts[3];
+                        if (isAccess === "false") {
+                            const falseReason = parts[4];
+                            logger.warn(`Access door false by ${type}. Reason ${falseReason}`);
+                        } else if (isAccess === "true") {
+                            const idDoor = parts[4];
+                            logger.info(`Access door ${idDoor} by ${type}`);
+                        } else {
+                            logger.warn("Invalid ACCESS_DOOR payload");
+                        }
+                        break;
+                    }
+                    case "REQUEST_ID_DOOR": {
+                        const macAddress = parts[2];
+                        const idDoor = await doorService.getIdDoor(macAddress);
+                        const message = `SERVER::SET_ID_DOOR::${macAddress}::${idDoor}`;
+                        mqttEmitter.emit("publish", message);
+                        break;
+                    }
+
+                    case "RFID": {
+                        const type = parts[2];
+                        const macAddress = parts[3];
+                        const uidCard = parts[4];
+                        if (type === "REGISTER") {
+                            await doorService.registerRfid(macAddress, uidCard);
+                        } else if (type === "REMOVE") {
+                            await doorService.removeRfid(macAddress, uidCard);
+                        }
+                        break;
+                    }
                     default:
                         logger.warn("Unknown command from ESP");
                 }

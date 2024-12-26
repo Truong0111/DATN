@@ -107,4 +107,19 @@ module.exports = {
             res.status(404).json({message: "Can't get doors."});
         }
     },
+
+    addAccountAccessDoor: async (req, res) => {
+        logger.info(`Request: Get all doors from ${req.ip}`);
+        const idDoor = req.body.idDoor;
+        const accounts = req.body.accounts;
+        const addSuccess = await doorService.addAccountsAccessDoor(idDoor, accounts);
+
+        if (addSuccess.success) {
+            logger.info(`Response: Add accounts to access door successfully for ${req.ip}`);
+            res.status(200).json({message: "Add accounts to access door successful"});
+        } else {
+            logger.info(`Response: Add accounts to access door failed from ${req.ip}`);
+            res.status(404).json({message: "Add accounts to access door failed"});
+        }
+    },
 };
