@@ -14,6 +14,7 @@ module.exports = {
     deleteAccount,
     getAccount,
     getAllAccounts,
+    getAccountsCount,
 }
 
 
@@ -87,7 +88,12 @@ async function updateAccount(idAccount, accountDataUpdate) {
         const dataToUpdate = {...accountDataUpdate};
 
         delete dataToUpdate.idAccount;
-        if (dataToUpdate.password) {
+        if (dataToUpdate.password === null
+            || dataToUpdate.password === undefined
+            || dataToUpdate.password === "") {
+            delete dataToUpdate.password;
+
+        } else if (dataToUpdate.password) {
             dataToUpdate.password = await util.hashPassword(dataToUpdate.password);
         }
 
@@ -106,8 +112,6 @@ async function updateAccount(idAccount, accountDataUpdate) {
 async function getAccount(idAccount) {
     try {
         const accountSnapshot = await accountCollection.doc(idAccount).get();
-
-        logger.info(`Get account: ${idAccount}`);
         return accountSnapshot.data();
     } catch (error) {
         logger.error(`Error getting account: ${error}`);
@@ -118,7 +122,6 @@ async function getAccount(idAccount) {
 async function getAllAccounts() {
     try {
         const accountsSnapshot = await accountCollection.get();
-        logger.info(`Get all accounts`);
         return accountsSnapshot.docs.map((doc) => doc.data());
     } catch (error) {
         logger.error(`Error getting all accounts: ${error}`);
@@ -126,14 +129,29 @@ async function getAllAccounts() {
     }
 }
 
-async function deleteAccount(idAccountDelete) {
+async function getAccountsCount() {
     try {
-        await accountCollection.doc(idAccountDelete).delete();
-        logger.info(`Delete account: ${idAccountDelete}`);
-        return true;
+        const accountsSnapshot = await accountCollection.get();
+        return accountsSnapshot.docs.length;
+    } catch (error) {
+        logger.error(`Error getting accounts count: ${error}`);
+        return 0;
+    }
+}
+
+async function deleteAccount(idAccountDelete, idDeletedAccount) {
+    try {
+        if (await isAccountManagerOrAdmin(idAccountDelete)) {
+            await accountCollection.doc(idDeletedAccount).delete();
+            logger.info(`Delete account: ${idDeletedAccount}`);
+            return [true, `Delete account ${idDeletedAccount} successfully`];
+        }
+
+        logger.info(`Delete account failed: Cannot delete account with id ${idDeletedAccount} by ${idAccountDelete}`);
+        return [false, "Cannot delete account"];
     } catch (error) {
         logger.error(`Error deleting account: ${error}`);
-        return false;
+        return [false, "Error when delete account"];
     }
 }
 
@@ -159,4 +177,12 @@ async function isPhoneNumberExist(phoneNumber) {
         .get();
 
     return !userSnapshot.empty;
+}
+
+async function isAccountManagerOrAdmin(idAccount) {
+    const accountSnapshot = await accountCollection
+        .where("idAccount", "==", idAccount)
+        .where("role", "array-contains-any", constantValue.roleToCheck)
+        .get();
+    return !accountSnapshot.empty;
 }

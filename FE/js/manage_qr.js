@@ -4,7 +4,7 @@ async function showQRCodeManger() {
     await fetchAndUpdateQrCodeManager();
 }
 
-//Render
+// Render
 function renderQrCodeManagerContent() {
     document.querySelector(".content").innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -14,8 +14,9 @@ function renderQrCodeManagerContent() {
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Door Position</th>
-                        <th>End Time</th>
+                        <th>ID Door</th>
+                        <th>UUID</th>
+                        <th>Next Change</th>
                         <th>Actions</th>                      
                     </tr>
                 </thead>
@@ -38,60 +39,86 @@ function renderQrCodeModal() {
     `;
 }
 
-//Function
-async function viewQR(element) {
-    const idToken = element.dataset.idToken;
+// Function
+async function openDoor(element) {
+    const idDoor = element.dataset.idDoor;
     try {
-        const token = await fetchTokenDetailsRequest(idToken);
-        renderQrCodeModal();
-        openModal("viewQrCodeModal");
-        generateQR(token);
+        await fetchOpenDoorRequest(idDoor);
     } catch (error) {
-        handleError("Error viewing qr: ", error);
+        handleError(`Failed to open door ${idDoor}`)
+    }
+}
+
+async function viewQR(element) {
+    const idDoor = element.dataset.idDoor;
+    try {
+        const token = await fetchTokenDetailsRequest(idDoor);
+
+        if (token.message) {
+            alert(token.message);
+        } else {
+            renderQrCodeModal();
+            openModal("viewQrCodeModal");
+
+            generateQR(`${idDoor}::${token.value}`);
+        }
+    } catch (error) {
+        handleError("Failed to view QR code. Please try again later.");
     }
 }
 
 function generateQR(token) {
-    const text = token.value.toString();
+    const text = token.toString();
     if (text) {
         QRCode.toCanvas(document.getElementById("qrCodeCanvas"), text, function (error) {
             if (error) {
-                console.error(error);
+                handleError("Failed to generate QR code.");
             } else {
-                console.log("QR Code generated");
+                console.log("QR Code generated successfully");
             }
         });
     } else {
-        console.error("Value invalid");
+        handleError("Invalid QR code data received.");
     }
 }
 
 
 async function fetchAndUpdateQrCodeManager() {
     try {
-        const tokenDatas = await fetchQrCodes();
+        const tokenDatas = await fetchAllTokens();
+
         const result = [];
 
-        tokenDatas.forEach((token) => {
-            const value = token.tokenData.value;
-            const [doorPosition, refId, endTime] = value.split('_');
+        Object.keys(tokenDatas).forEach((key) => {
+            const token = tokenDatas[key];
             result.push({
-                idToken: token.idToken,
-                doorPosition: doorPosition,
-                refId: refId,
-                endTime: endTime,
+                idDoor: key,
+                uuid: token?.value,
+                timeStamp: token?.timeStamp,
             });
         });
 
         const tableBody = document.querySelector("#qrCodeBody");
+        if (result.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="text-center">No QR codes found</td>
+                </tr>
+            `;
+            return;
+        }
+
         tableBody.innerHTML = result
             .map((qr) => `
             <tr>
-                <td>${qr.doorPosition}</td>
-                <td>${formatDate(qr.endTime)}</td>
+                <td>${escapeHtml(qr.idDoor)}</td>
+                <td>${escapeHtml(qr.uuid)}</td>
+                <td>${convertTimestampToDate(qr.timeStamp)}</td>
                 <td>
-                    <button class="btn btn-sm btn-info" data-id-token="${qr.idToken}"
-                    onclick="viewQR(this)"> View QR</button>
+                    <button class="btn btn-sm btn-success" data-id-door="${escapeHtml(qr.idDoor)}"
+                    onclick="openDoor(this)">Open</button>
+                    <button class="btn btn-sm btn-info" data-id-door="${escapeHtml(qr.idDoor)}"
+                    onclick="viewQR(this)">View QR</button>
                 </td>
             </tr>
         `).join("");
@@ -100,31 +127,59 @@ async function fetchAndUpdateQrCodeManager() {
     }
 }
 
-//API
-async function fetchQrCodes() {
+// API
+async function fetchAllTokens() {
     const token = getToken();
-    const idAccount = getAccountId();
+    const api = `${ref}/token/getAll`;
 
-    const api = `${ref}/token/getTokenByUserId/${idAccount}`;
+    try {
+        const response = await getResponse(api, "GET", token);
 
-    const response = await getResponse(api, "GET", token);
-
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to fetch tokens');
+        }
+        return response.json();
+    } catch (error) {
+        throw new Error(`Failed to fetch tokens: ${error.message}`);
     }
-    return response.json();
 }
 
-async function fetchTokenDetailsRequest(idToken) {
+async function fetchTokenDetailsRequest(idDoor) {
     const token = getToken();
-    const api = `${ref}/token/${idToken}`;
+    const api = `${ref}/token/idDoor/${idDoor}`;
 
-    const response = await getResponse(api, "GET", token);
+    try {
+        const response = await getResponse(api, "GET", token);
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to fetch token details');
+        }
+        return response.json();
+    } catch (error) {
+        throw new Error(`Failed to fetch token details: ${error.message}`);
     }
-    return response.json();
+}
+
+async function fetchOpenDoorRequest(idDoor) {
+    const token = getToken();
+    const api = `${ref}/door/open`;
+
+    const body = JSON.stringify({
+        idDoor: idDoor,
+        idAccount: getAccountId()
+    })
+
+    try {
+        const response = await getResponseWithBody(api, "POST", token, body);
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to open door');
+        }
+        return response.json();
+    } catch (error) {
+        handleError(`Error when request open door: ${error.message}`);
+    }
 }

@@ -1,9 +1,9 @@
 const jwt = require("jsonwebtoken");
-const constantValue = require("../../constants.json");
 const logger = require("../../winston");
 require("dotenv").config({path: "../.env"});
 
 const accountService = require("../../Service/AccountService");
+const ticketService = require("../../Service/TicketService");
 
 module.exports = {
     registerAccount: async (req, res) => {
@@ -11,8 +11,10 @@ module.exports = {
         logger.info(`Request: register account from ${req.ip}`);
         const registerSuccess = await accountService.registerAccount(accountData);
         if (registerSuccess[0]) {
+            logger.info(`Response: Register account successful for ${req.ip}`);
             res.status(200).send({message: registerSuccess[1]});
         } else {
+            logger.warn(`Response: Register account failed for ${req.ip}`);
             res.status(400).send({message: registerSuccess[1]});
         }
     },
@@ -29,7 +31,8 @@ module.exports = {
             logger.info(`Response: Login successful on app ${type} for ${req.ip}`);
             res.status(200).json({message: "Login successful.", token: jwtToken});
         } else {
-            res.status(401).json({message: "Invalid biometric data."});
+            logger.warn(`Response: Login failed on app ${type} for ${req.ip}`);
+            res.status(401).json({message: "Can't generate jwt."});
         }
 
     },
@@ -55,7 +58,7 @@ module.exports = {
                         logger.info(`Response: Login successful on app ${type} as ${role} for ${req.ip}`);
                         res.status(200).json({message: "Login successful.", token: jwtToken});
                     } else {
-                        logger.info(`Response: Login failed on app ${type} as ${role} for ${req.ip}`);
+                        logger.warn(`Response: Login failed on app ${type} as ${role} for ${req.ip}`);
                         res.status(403).json({message: "Access denied."});
                     }
                     break;
@@ -68,7 +71,7 @@ module.exports = {
                         logger.info(`Response: Login successful on app ${type} as ${role} for ${req.ip}`);
                         res.status(200).json({message: "Login successful.", token: jwtToken});
                     } else {
-                        logger.info(`Response: Login failed on app ${type} as ${role} for ${req.ip}`);
+                        logger.warn(`Response: Login failed on app ${type} as ${role} for ${req.ip}`);
                         res.status(403).json({message: "Access denied."});
                     }
                     break;
@@ -78,7 +81,7 @@ module.exports = {
                     break;
             }
         } else {
-            logger.info(`Response: Invalid username: ${username} Or password from ${req.ip}`);
+            logger.warn(`Response: Invalid username: ${username} Or password from ${req.ip}`);
             res.status(401).json({message: "Invalid username or password."});
         }
     },
@@ -91,7 +94,7 @@ module.exports = {
             logger.info(`Response: Get account data successfully for ${req.ip}`);
             res.status(200).json(account);
         } else {
-            logger.info(`Response: Get account data failed for ${req.ip}`);
+            logger.warn(`Response: Get account data failed for ${req.ip}`);
             res.status(404).json({message: "Account not found."});
         }
     },
@@ -109,21 +112,27 @@ module.exports = {
             logger.info(`Response: Update account data successfully for ${req.ip}`);
             res.status(200).json({message: "Update account successful."});
         } else {
-            logger.info(`Response: Update account data failed for ${req.ip}`);
+            logger.warn(`Response: Update account data failed for ${req.ip}`);
             res.status(400).json({message: "Update account failed."});
         }
     },
 
     deleteAccount: async (req, res) => {
-        const idAccountDelete = req.params.idAccount;
+        const idAccountDelete = req.body.idAccountDelete;
+        const idDeletedAccount = req.params.idAccount;
         logger.info(`Request: delete account from ${req.ip}`);
-        const deleteSuccess = await accountService.deleteAccount(idAccountDelete);
-        if (deleteSuccess) {
+
+        const deleteSuccess = await Promise.any([
+            accountService.deleteAccount(idAccountDelete, idDeletedAccount),
+            ticketService.deleteTicketRefIdAccount(idDeletedAccount),
+        ]);
+
+        if (deleteSuccess[0]) {
             logger.info(`Response: Delete account successfully for ${req.ip}`);
-            res.status(200).json({message: "Delete account successful."});
+            res.status(200).json({message: deleteSuccess[1]});
         } else {
-            logger.info(`Response: Delete account failed for ${req.ip}`);
-            res.status(400).json({message: "Delete account failed."});
+            logger.warn(`Response: Delete account failed for ${req.ip}`);
+            res.status(400).json({message: deleteSuccess[1]});
         }
     },
 
@@ -134,7 +143,19 @@ module.exports = {
             logger.info(`Response: Get all accounts successfully for ${req.ip}`);
             res.status(200).json(accounts);
         } else {
-            logger.info(`Response: No accounts found for ${req.ip}`);
+            logger.warn(`Response: No accounts found for ${req.ip}`);
+            res.status(404).json({message: "No accounts found."});
+        }
+    },
+
+    getAccountsCount: async (req, res) => {
+        logger.info(`Request: get accounts count from ${req.ip}`);
+        const accounts = await accountService.getAccountsCount();
+        if (accounts) {
+            logger.info(`Response: Get accounts count successfully for ${req.ip}`);
+            res.status(200).json(accounts);
+        } else {
+            logger.warn(`Response: No accounts found for ${req.ip}`);
             res.status(404).json({message: "No accounts found."});
         }
     },

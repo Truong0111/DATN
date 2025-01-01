@@ -136,3 +136,4 @@ key
 note.txt
 .idea
 ngrok.yml
+*.log

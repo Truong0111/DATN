@@ -82,7 +82,7 @@ function renderRegisterTicketModal() {
     }
 }
 
-function renderTicketViewModal(ticket, door) {
+function renderTicketViewModal(ticket, door, account) {
     const modalBody = document.querySelector("#viewTicketModal .modal-body");
 
     const statusBadge = ticket.isAccept === false
@@ -95,6 +95,12 @@ function renderTicketViewModal(ticket, door) {
         </div>
         <div class="mb-3">
             <strong>Door:</strong> ${door.position}
+        </div>
+        <div class="mb-3">
+            <strong>Full name:</strong> ${account.firstName} ${account.lastName}
+        </div>
+        <div class="mb-3">
+            <strong>Ref ID:</strong> ${account.refId}
         </div>
         <div class="mb-3">
             <strong>Status:</strong> ${statusBadge}
@@ -187,7 +193,8 @@ async function viewTicket(element) {
     try {
         const ticket = await fetchTicketDetailsRequest(idTicket);
         const door = await fetchGetDoorDetailsRequest(ticket.idDoor);
-        renderTicketViewModal(ticket, door);
+        const account = await fetchAccountDataRequest(ticket.idAccount);
+        renderTicketViewModal(ticket, door, account);
         openModal("viewTicketModal");
     } catch (error) {
         handleError("Error viewing ticket:", error);
@@ -253,7 +260,7 @@ function getTicketFormData(idAccount) {
 //API
 async function fetchTickets(idAccount) {
     const token = getToken();
-    const api = `${ref}/ticket/idAccount/${idAccount}`;
+    const api = `${ref}/ticket/getAll`;
 
     const response = await getResponse(api, "GET", token);
 
@@ -340,4 +347,26 @@ async function fetchDeleteTicketRequest(idTicket) {
         throw new Error(errorData.message);
     }
     return true;
+}
+
+async function fetchTicketsRefDoor(idDoor) {
+    const token = getToken();
+    const api = `${ref}/ticket/idDoor/${idDoor}`;
+    const response = await getResponse(api, "GET", token);
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+    }
+    return response.json();
+}
+
+async function fetchTicketsRefAccount(idAccount) {
+    const token = getToken();
+    const api = `${ref}/ticket/idAccount/${idAccount}`;
+    const response = await getResponse(api, "GET", token);
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+    }
+    return response.json();
 }

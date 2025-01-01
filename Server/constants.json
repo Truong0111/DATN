@@ -5,11 +5,6 @@
   "ticketsCollection": "tickets",
   "tokensCollection": "tokens",
   "requestsCollection": "requests",
-  "doorStatus": {
-    "open": "open",
-    "close": "close",
-    "unknown": "unknown"
-  },
   "timeData": {
     "seconds": 10,
     "minutes": 0,

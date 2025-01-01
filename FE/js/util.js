@@ -60,7 +60,7 @@ async function getResponseWithBody(api, method, token, body) {
 }
 
 function formatDate(date) {
-    return new Date(date).toLocaleDateString("en-GB", {
+    return new Date(date).toLocaleDateString("vi-VN", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
@@ -68,6 +68,19 @@ function formatDate(date) {
         minute: "2-digit",
         second: "2-digit",
     }).replace(",", "");
+}
+
+function convertTimestampToDate(timestamp) {
+    const date = new Date(timestamp);
+    const options = {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+    };
+    return date.toLocaleString("vi-VN", options)
 }
 
 function togglePassword(button) {
@@ -84,4 +97,14 @@ function togglePassword(button) {
         eyeIcon.classList.remove("bi-eye-slash");
         eyeIcon.classList.add("bi-eye");
     }
+}
+
+function escapeHtml(unsafe) {
+    return unsafe
+        .toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }

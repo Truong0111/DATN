@@ -18,8 +18,9 @@ async function fetchAndUpdateDashboardManger() {
     const idAccount = getAccountId(token);
 
     try {
-        const [account, doors, tickets] = await Promise.all([
+        const [account, users, doors, tickets] = await Promise.all([
             fetchAccountDataRequest(idAccount),
+            fetchAccountsCount(),
             fetchDoors(),
             fetchTickets(idAccount),
         ]);
@@ -30,9 +31,14 @@ async function fetchAndUpdateDashboardManger() {
         document.getElementById("accountEmail").textContent = account.email;
         document.getElementById("accountPhone").textContent = account.phoneNumber;
         document.getElementById("accountMSSV").textContent = account.refId;
-
+        document.getElementById("accountRole").textContent
+            = account.role[account.role.length - 1].charAt(0).toUpperCase()
+            + account.role[account.role.length - 1].slice(1);
         // Update statistics
         document.getElementById("doorCount").textContent = doors.length;
+
+        document.getElementById("userCount").textContent = users;
+
         document.getElementById("pendingTickets").textContent = tickets.filter(
             (t) => t.isAccept === false
         ).length;
@@ -58,12 +64,22 @@ function renderDashboardContent() {
                           <div class="col-md-6">
                               <p><strong>Phone:</strong> <span id="accountPhone">Loading...</span></p>
                               <p><strong>MSSV:</strong> <span id="accountMSSV">Loading...</span></p>
+                              <p><strong>Role:</strong> <span id="accountRole">Loading...</span></p>
                           </div>
                       </div>
                   </div>
               </div>
               <div class="row mt-4">
-                  <div class="col-md-6">
+                  <div class="col-md-6 mb-4">
+                      <div class="card dashboard-card">
+                          <div class="card-body text-center">
+                              <h5 class="card-title">User</h5>
+                              <div class="stat-number" id="userCount">0</div>
+                              <p class="card-text">Total user</p>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-6 mb-4">
                       <div class="card dashboard-card">
                           <div class="card-body text-center">
                               <h5 class="card-title">Door Access</h5>
@@ -72,7 +88,7 @@ function renderDashboardContent() {
                           </div>
                       </div>
                   </div>
-                  <div class="col-md-6">
+                  <div class="col-md-6 mb-4">
                       <div class="card dashboard-card">
                           <div class="card-body text-center">
                               <h5 class="card-title">Ticket Status</h5>

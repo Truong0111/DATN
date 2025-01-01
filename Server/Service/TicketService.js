@@ -18,6 +18,7 @@ module.exports = {
     getTicketsByIdDoor,
     getAllTickets,
     deleteTicket,
+    deleteTicketRefIdAccount,
     deleteTicketRefIdDoor,
 };
 
@@ -115,7 +116,7 @@ async function getTicket(idTicket) {
             logger.warn(`Ticket ${idTicket} does not exist`);
             return []
         }
-        logger.info(`Get ticket ${idTicket}`)
+
         return ticketSnapshot.data();
     } catch (error) {
         logger.error(`Error get ticket ${idTicket}`, error);
@@ -128,11 +129,10 @@ async function getTicketsByIdAccount(idAccount) {
         const ticketsSnapshot = await ticketCollection
             .where("idAccount", "==", idAccount)
             .get();
-        if (!util.isArrayEmptyOrNull(ticketsSnapshot)) {
+        if (util.isArrayEmptyOrNull(ticketsSnapshot)) {
             logger.warn(`Account ${idAccount} does not have any tickets`);
             return []
         }
-        logger.info(`Get tickets from account ${idAccount}`);
 
         return ticketsSnapshot.docs.map((doc) => doc.data());
     } catch (error) {
@@ -148,12 +148,10 @@ async function getTicketsByIdDoor(idDoor) {
             .where("idDoor", "==", idDoor)
             .get();
 
-        if (!util.isArrayEmptyOrNull(ticketsSnapshot)) {
+        if (util.isArrayEmptyOrNull(ticketsSnapshot)) {
             logger.warn(`Door ${idDoor} does not have refs any tickets`);
             return []
         }
-
-        logger.info(`Get tickets ref door ${idDoor}`);
 
         return ticketsSnapshot.docs.map((doc) => doc.data());
     } catch (error) {
@@ -167,15 +165,11 @@ async function getAllTickets() {
     try {
         const ticketsSnapshot = await ticketCollection.get();
         if(util.isArrayEmptyOrNull(ticketsSnapshot)){
-            logger.warn(`No tickets found when getting all tickets`);
             return [];
         }
 
-        logger.info(`Get all tickets`);
-
         return ticketsSnapshot.docs.map((doc) => doc.data());
     } catch (error) {
-
         logger.error(`Error when getting all tickets`);
         return [];
     }
@@ -199,19 +193,14 @@ async function deleteTicketRefIdAccount(idAccount) {
             .get();
 
         if(util.isArrayEmptyOrNull(ticketsSnapshot)){
-            logger.warn(`No ticket ref account ${idAccount}`);
             return false;
         }
 
         ticketsSnapshot.forEach((docRef) => {
             deleteTicket(docRef.id);
         })
-
-        logger.info(`Delete all tickets ref account ${idAccount}`);
-
         return true;
     } catch (error) {
-
         logger.error(`Error when deleting ticket ref account ${idAccount}`);
         return false;
     }

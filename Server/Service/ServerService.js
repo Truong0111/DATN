@@ -9,8 +9,6 @@ const tokenService = require("../Service/TokenService");
 
 const serverFunction = {
     scanTicket: async () => {
-        logger.info("Start scan ticket");
-
         const tickets = await ticketService.getAllTickets();
 
         if (util.isArrayEmptyOrNull(tickets)) {
@@ -37,8 +35,6 @@ const serverFunction = {
     },
 
     scanDoor: async () => {
-        logger.info("Start scan door");
-
         const doors = await doorService.getAllDoors();
         const currentTime = new Date();
         currentTime.setMinutes(0, 0, 0);
@@ -46,8 +42,7 @@ const serverFunction = {
         const newTimeStamp = currentTime.getTime();
 
         for (const door of doors) {
-            if (door.status === constantValue.doorStatus.open) {
-                logger.info(`Get token for door ${door.idDoor} by server`);
+            if (door.status) {
                 const tokenValue = await tokenService.getToken(door.idDoor);
                 if (!tokenValue || tokenValue.timeStamp < Date.now()) {
                     const newToken = util.generateToken();
@@ -72,7 +67,6 @@ const serverFunction = {
                     }
                 }
             } else {
-                logger.info(`Delete token for door ${door.idDoor} because door is not open by server`);
                 const tokenValue = await tokenService.getToken(door.idDoor);
                 if (tokenValue) {
                     logger.info(`Request delete token for door ${door.idDoor} by server`);

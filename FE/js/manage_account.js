@@ -1,6 +1,7 @@
 async function showAccountManager() {
     updateNavActive("showAccountManager()");
     renderAccountContent();
+    await fetchAndUpdateAccountDetail();
     await fetchAndUpdateAccountManager();
 }
 
@@ -54,10 +55,58 @@ function renderAccountContent() {
                       </form>
                   </div>
               </div>
+              
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                  <h2>Account Manager</h2>
+              </div>
+              <div class="table-responsive">
+                  <table class="table table-hover">
+                      <thead>
+                          <tr>
+                              <th>ID</th>
+                              <th>Name</th>
+                              <th>Email</th>
+                              <th>Phone Number</th>
+                              <th>RefId</th>
+                              <th>Actions</th>
+                          </tr>
+                      </thead>
+                      <tbody id="accountTableBody">
+                          <tr>
+                              <td colspan="6" class="text-center">Loading...</td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
           `;
 }
 
-async function fetchAndUpdateAccountManager() {
+function renderAccountViewModal(account) {
+    const modalBody = document.querySelector("#viewAccountModal .modal-body");
+
+    modalBody.innerHTML = `
+        <div class="mb-3">
+            <strong>Account ID:</strong> ${account.idAccount}
+        </div>
+        <div class="mb-3">
+            <strong>First Name:</strong> ${account.firstName}
+        </div>
+        <div class="mb-3">
+            <strong>Last Name:</strong> ${account.lastName}
+        </div>
+        <div class="mb-3">
+            <strong>Email:</strong> ${account.email}
+        </div>
+        <div class="mb-3">
+            <strong>Phone Number:</strong> ${account.phoneNumber}
+        </div>
+        <div class="mb-3">
+            <strong>Ref ID:</strong> ${account.refId}
+        </div>
+    `;
+}
+
+async function fetchAndUpdateAccountDetail() {
     const token = getToken();
     const idAccount = getAccountId(token);
     try {
@@ -125,11 +174,91 @@ function setupAccountFormAndSubmit(form) {
     };
 }
 
+async function viewAccount(element){
+    const idAccount = element.dataset.idAccount;
+    try {
+        const account = await fetchAccountDataRequest(idAccount);
+        renderAccountViewModal(account);
+        openModal("viewAccountModal");
+    } catch (error) {
+        handleError("Error viewing account:", error);
+    }
+}
+
+async function editAccount(element){
+    const idAccount = element.dataset.idAccount;
+    try {
+        const account = await fetchAccountDataRequest(idAccount);
+
+        const idAccountEdit = document.getElementById("idAccount-edit");
+        const firstNameAccountEdit = document.getElementById("firstName-edit");
+        const lastNameAccountEdit = document.getElementById("lastName-edit");
+        const emailAccountEdit = document.getElementById("email-edit");
+        const phoneNumberAccountEdit = document.getElementById("phoneNumber-edit");
+        const refIdAccountEdit = document.getElementById("refId-edit");
+        const newPasswordAccountEdit = document.getElementById("newPassword-edit");
+
+        idAccountEdit.value = account.idAccount;
+        firstNameAccountEdit.value = account.firstName;
+        lastNameAccountEdit.value = account.lastName;
+        emailAccountEdit.value = account.email;
+        phoneNumberAccountEdit.value = account.phoneNumber;
+        refIdAccountEdit.value = account.refId;
+        newPasswordAccountEdit.value = "";
+
+        openModal("editAccountModal");
+    } catch (error) {
+        handleError("Error loading account for edit:", error);
+    }
+}
+
+async function deleteAccount(element){
+    const idDeletedAccount = element.dataset.idAccount;
+
+    const ticketsRefIdAccount = await fetchTicketsRefAccount(idDeletedAccount);
+    const numberTicker = ticketsRefIdAccount.length;
+
+    const confirmText = `Are you sure you want to delete this account?\n`
+        + `Has ${numberTicker} ticket${numberTicker === 1 ? "" : "s"} request of this account.\n`
+        + `It will also delete those tickets!!!`;
+
+    if (!confirm(confirmText)) return;
+
+    try {
+        const idAccountDelete = getAccountId();
+        await fetchDeleteAccountRequest(idAccountDelete, idDeletedAccount);
+        await showAccountManager();
+    } catch (error) {
+        handleError("Error deleting account:", error);
+    }
+}
+
 async function submitForm(form, accountData) {
     try {
         await fetchUpdateAccountRequest(accountData);
         await fetchAndUpdateAccountManager();
         disableAccountEditing(form);
+    } catch (error) {
+        handleError("Error updating account:", error);
+    }
+}
+
+async function saveAccountChanges(){
+    const form = document.getElementById("editAccountForm");
+
+    const accountData = {
+        idAccount: form.querySelector("#idAccount-edit").value,
+        firstName: form.querySelector("#firstName-edit").value,
+        lastName: form.querySelector("#lastName-edit").value,
+        email: form.querySelector("#email-edit").value,
+        phoneNumber: form.querySelector("#phoneNumber-edit").value,
+        refId: form.querySelector("#refId-edit").value,
+        password: form.querySelector("#newPassword-edit").value,
+    };
+
+    try {
+        await fetchUpdateAccountRequest(accountData);
+        await closeModalAndRefresh("editAccountModal", showAccountManager);
     } catch (error) {
         handleError("Error updating account:", error);
     }
@@ -154,6 +283,89 @@ async function fetchUpdateAccountRequest(accountData) {
     const api = `${ref}/account/${accountData.idAccount}`;
     const body = JSON.stringify(accountData);
     const response = await getResponseWithBody(api, "PATCH", token, body);
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+    }
+    return true;
+}
+
+async function fetchAccountsCount() {
+    const token = getToken();
+    const api = `${ref}/account/count`;
+
+    const response = await getResponse(api, "GET", token, null);
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+    }
+    return response.json();
+}
+
+async function fetchAllAccounts() {
+    const token = getToken();
+    const api = `${ref}/account/getAllAccounts`;
+
+    const response = await getResponse(api, "GET", token);
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+    }
+    return response.json();
+}
+
+async function fetchAccountCanAccessDoor(idDoor) {
+    const token = getToken();
+    const api = `${ref}/door/getAccountsCanAccessDoor/${idDoor}`;
+
+    const response = await getResponse(api, "GET", token);
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+    }
+    return response.json();
+}
+
+async function fetchAndUpdateAccountManager() {
+    try {
+        const accounts = await fetchAllAccounts();
+        const tableBody = document.getElementById("accountTableBody");
+        tableBody.innerHTML = accounts
+            .map((account) => `
+            <tr>
+                <td>${account.idAccount}</td>
+                <td>${account.firstName} ${account.lastName}</td>
+                <td>${account.email}</td>
+                <td>${account.phoneNumber}</td>
+                <td>${account.refId}</td>
+                <td>
+                    <button class="btn btn-sm btn-info" data-id-account="${account.idAccount}" 
+                    onclick="viewAccount(this)">View</button>
+                    <button class="btn btn-sm btn-warning" data-id-account="${account.idAccount}" 
+                    onclick="editAccount(this)">Edit</button>
+                    <button class="btn btn-sm btn-danger" data-id-account="${account.idAccount}" 
+                    onclick="deleteAccount(this)">Delete</button>
+                </td>
+            </tr>
+        `).join("");
+    } catch (error) {
+        handleError("Error fetching doors:", error);
+    }
+}
+
+async function fetchDeleteAccountRequest(idAccountDelete, idDeletedAccount){
+    const token = getToken();
+    const api = `${ref}/account/${idDeletedAccount}`;
+
+    const body = JSON.stringify({
+       idAccountDelete: idAccountDelete,
+    });
+
+    const response = await getResponseWithBody(api, "DELETE", token, body);
 
     if (!response.ok) {
         const errorData = await response.json();

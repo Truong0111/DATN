@@ -24,7 +24,7 @@ async function createToken(idDoor, token, timeStamp) {
         logger.info(`Create new token for door ${idDoor}`, {token: token});
         return true;
     } catch (error) {
-        logger.error(`Error when creating new token for door ${idDoor}`);
+        logger.error(`Error when creating new token for door ${idDoor}`, error);
         return false;
     }
 }
@@ -38,13 +38,10 @@ async function getToken(idDoor) {
             logger.warn(`No token found for ${idDoor}`);
             return false;
         }
-
-        logger.info(`Get token for ${idDoor}`, {token: snapshot.val()});
-
         return snapshot.val();
     } catch (error) {
 
-        logger.error(`Error when getting token for ${idDoor}`);
+        logger.error(`Error when getting token for ${idDoor}`, error);
         return false;
     }
 }
@@ -62,15 +59,15 @@ async function checkToken(idDoor, token) {
         const currentToken = snapshot.val().value;
 
         if(currentToken === token){
-            logger.info(`Token ${token} is correct for ${idDoor}`, {checkToken: token, currentToken: currentToken});
+            logger.info(`Token ${token} is correct for ${idDoor}`, {tokenCheck: token, currentToken: currentToken});
             return [false, currentToken];
         }
         else{
-            logger.info(`Token ${token} is incorrect for ${idDoor}`, {checkToken: token, currentToken: currentToken});
+            logger.info(`Token ${token} is incorrect for ${idDoor}`, {tokenCheck: token, currentToken: currentToken});
             return [true, currentToken];
         }
     } catch (error) {
-        logger.error(`Error when checking token for ${idDoor}`);
+        logger.error(`Error when checking token for ${idDoor}`, error);
         return [false, null];
     }
 }
@@ -89,7 +86,7 @@ async function updateToken(idDoor, token, timeStamp) {
         return true;
     } catch (error) {
 
-        logger.error(`Error when updating token for ${idDoor}`);
+        logger.error(`Error when updating token for ${idDoor}`, error);
         return false;
     }
 }
@@ -110,10 +107,15 @@ async function getAllTokens() {
     try {
         const tokensRef = rtdb.ref(constantValue.tokensCollection);
         const snapshot = await tokensRef.once("value");
-        logger.info(`Get all tokens`);
+
+        if (!snapshot.exists()) {
+            logger.warn('No tokens found');
+            return null;
+        }
+
         return snapshot.val();
     } catch (error) {
-        logger.error(`Error when getting all tokens`);
+        logger.error('Error when getting all tokens', error);
         return null;
     }
 }

@@ -12,10 +12,11 @@ module.exports = {
             logger.info(`Response: Create ticket successfully for ${req.ip}`);
             res.status(200).json({message: "Create ticket successful."});
         } else {
-            logger.error(`Error: Create ticket failed for ${req.ip}`);
+            logger.warn(`Error: Create ticket failed for ${req.ip}`);
             res.status(400).json({message: "Create ticket failed."});
         }
     },
+
     getTicket: async (req, res) => {
         const idTicket = req.params.idTicket;
         logger.info(`Request: Get ticket data of ${idTicket} from ${req.ip}`);
@@ -26,14 +27,15 @@ module.exports = {
                 res.status(200).json(ticket);
             }
             else{
-                logger.info(`Response: Ticket ${idTicket} not found for ${req.ip}`);
+                logger.warn(`Response: Ticket ${idTicket} not found for ${req.ip}`);
                 res.status(404).json({message: "Ticket not found."});
             }
         } else {
-            logger.info(`Response: Ticket ${idTicket} not found for ${req.ip}`);
+            logger.warn(`Response: Ticket ${idTicket} not found for ${req.ip}`);
             res.status(404).json({message: "Ticket not found."});
         }
     },
+
     acceptTicket: async (req, res) => {
         const idTicket = req.params.idTicket;
         logger.info(`Request: Accept ticket ${idTicket} from ${req.ip}`);
@@ -42,10 +44,11 @@ module.exports = {
             logger.info(`Response: Accept ticket successfully for ${req.ip}`);
             res.status(200).json({message: "Accept ticket successful."});
         } else {
-            logger.info(`Response: Accept ticket failed for ${req.ip}`);
+            logger.warn(`Response: Accept ticket failed for ${req.ip}`);
             res.status(400).json({message: "Accept ticket failed."});
         }
     },
+
     updateTicket: async (req, res) => {
         const idTicket = req.params.idTicket;
         const ticketDataUpdate = req.body;
@@ -58,10 +61,11 @@ module.exports = {
             logger.info(`Response: Update ticket successfully for ${req.ip}`);
             res.status(200).json({message: "Update ticket successful."});
         } else {
-            logger.info(`Response: Update ticket failed for ${req.ip}`);
+            logger.warn(`Response: Update ticket failed for ${req.ip}`);
             res.status(400).json({message: "Update ticket failed."});
         }
     },
+
     deleteTicket: async (req, res) => {
         const idTicket = req.params.idTicket;
         logger.info(`Request: Delete ticket ${idTicket} from ${req.ip}`);
@@ -70,10 +74,11 @@ module.exports = {
             logger.info(`Response: Delete ticket successfully for ${req.ip}`);
             res.status(200).json({message: "Delete ticket successful."});
         } else {
-            logger.info(`Response: Delete ticket failed for ${req.ip}`);
+            logger.warn(`Response: Delete ticket failed for ${req.ip}`);
             res.status(400).json({message: "Delete ticket failed."});
         }
     },
+
     getTicketsByIdAccount: async (req, res) => {
         const idAccount = req.params.idAccount;
         logger.info(`Request: Get tickets ref ${idAccount} from ${req.ip}`);
@@ -82,7 +87,7 @@ module.exports = {
             logger.info(`Request: Get tickets data ref ${idAccount} successfully for ${req.ip}`);
             res.status(200).json(tickets);
         } else {
-            logger.info(`Response: Cannot get tickets data of ${idAccount} for ${req.ip}`);
+            logger.warn(`Response: Cannot get tickets data of ${idAccount} for ${req.ip}`);
             res.status(404).json({message: "Cannot get any ticket by id account."});
         }
     },
@@ -95,7 +100,7 @@ module.exports = {
             logger.info(`Response: Get tickets data ref ${idDoor} successfully for ${req.ip}`);
             res.status(200).json(tickets);
         } else {
-            logger.info(`Response: Cannot get tickets data of ${idDoor} for ${req.ip}`);
+            logger.warn(`Response: Cannot get tickets data of ${idDoor} for ${req.ip}`);
             res.status(404).json({message: "Cannot get any ticket by id door."});
         }
     },
@@ -107,7 +112,7 @@ module.exports = {
             logger.info(`Response: Get all tickets data successfully for ${req.ip}`);
             res.status(200).json(tickets);
         } else {
-            logger.info(`Response: Cannot get any tickets for ${req.ip}`);
+            logger.warn(`Response: Cannot get any tickets for ${req.ip}`);
             res.status(404).json({message: "Cannot get any tickets."});
         }
     },

@@ -4,6 +4,7 @@ services:
     ports:
       - "3000:3000"
       - "3001:3001"
+      - "8181:8181"
     volumes:
       - .:/usr/src/app
       - ./key:/usr/src/app/key
@@ -12,7 +13,7 @@ services:
     container_name: node-app
     depends_on:
       - mqtt-broker
-#    restart: always
+    restart: always
   mqtt-broker:
     image: eclipse-mosquitto:latest
     container_name: mqtt-broker
