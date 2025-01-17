@@ -39,7 +39,7 @@ mqttEmitter.on("publish", function (message) {
             logger.error("Publish error:", err);
         }
         else{
-            logger.info("Publish message:", message);
+            console.log("Publish message:", message);
         }
     });
 });

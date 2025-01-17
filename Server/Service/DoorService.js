@@ -406,7 +406,7 @@ async function removeAccountCanAccess(idDoor, idAccount) {
     try {
         const door = await getDoor(idDoor);
         if (door.idAccountCreate === idAccount) {
-            logger.warn(`Account ${idAccount} can't be deleted`);
+            // logger.warn(`Account ${idAccount} can't be deleted`);
             return false;
         }
 

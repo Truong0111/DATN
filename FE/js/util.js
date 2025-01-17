@@ -6,7 +6,8 @@ function updateNavActive(onclick) {
 }
 
 const JwtTokenString = "jwtToken";
-const ref = "http://localhost:3000";
+const ref = "https://burro-ideal-macaw.ngrok-free.app";
+//https://burro-ideal-macaw.ngrok-free.app
 
 function getToken() {
     return localStorage.getItem(JwtTokenString);
@@ -43,6 +44,7 @@ async function getResponse(api, method, token) {
     return await fetch(api, {
         method: method,
         headers: {
+            "ngrok-skip-browser-warning": true,
             Authorization: `Bearer ${token}`,
         },
     });
@@ -52,6 +54,7 @@ async function getResponseWithBody(api, method, token, body) {
     return await fetch(api, {
         method: method,
         headers: {
+            "ngrok-skip-browser-warning": true,
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
         },

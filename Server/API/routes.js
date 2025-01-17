@@ -1,5 +1,3 @@
-const doorController = require("./Controllers/DoorController");
-const tokenController = require("./Controllers/TokenController");
 module.exports = function (authMiddleware, app) {
     let accountController = require("./Controllers/AccountController");
     let doorController = require("./Controllers/DoorController");
@@ -48,8 +46,6 @@ module.exports = function (authMiddleware, app) {
 
     app.route("/door/open")
         .post(authMiddleware, doorController.openDoor);
-
-    app.route("/door/close")
 
     app
         .route("/ticket/create")

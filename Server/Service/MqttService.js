@@ -34,12 +34,15 @@ const mqttFunction = {
                             logger.info(`Request check token for door ${idDoor}`);
                             const checkTokenResponse = await tokenService.checkToken(idDoor, macAddress);
                             if (checkTokenResponse[0]) {
+                                logger.info(`Update token for door ${idDoor}`);
                                 const message = `SERVER::UPDATE_TOKEN::${macAddress}::${idDoor}::${checkTokenResponse[1]}`;
                                 mqttEmitter.emit("publish", message);
                             } else if (checkTokenResponse[1]) {
+                                logger.info(`Response check token for door ${idDoor}`);
                                 const message = `SERVER::RESPONSE_CHECK_TOKEN::${macAddress}::${idDoor}::${checkTokenResponse[1]}`;
                                 mqttEmitter.emit("publish", message);
                             } else {
+                                logger.info(`Response check token for door ${idDoor} token invalid`);
                                 const message = `SERVER::RESPONSE_CHECK_TOKEN::${macAddress}::${idDoor}::TokenInvalid`;
                                 mqttEmitter.emit("publish", message);
                             }
@@ -51,11 +54,12 @@ const mqttFunction = {
                     case "ACCESS_DOOR": {
                         const type = parts[2];
                         const isAccess = parts[3];
-                        if (isAccess === "false") {
-                            const falseReason = parts[4];
+                        const uid = parts[4];
+                        if (isAccess === "0") {
+                            const falseReason = parts[5];
                             logger.warn(`Access door false by ${type}. Reason ${falseReason}`);
-                        } else if (isAccess === "true") {
-                            const idDoor = parts[4];
+                        } else if (isAccess === "1") {
+                            const idDoor = parts[5];
                             logger.info(`Access door ${idDoor} by ${type}`);
                         } else {
                             logger.warn("Invalid ACCESS_DOOR payload");

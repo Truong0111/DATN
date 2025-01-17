@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            localStorage.setItem("jwtToken", data.token);
+            saveToken(data.token);
             window.location.href = "home.html";
         } catch (error) {
             alert(error.message);

@@ -25,10 +25,8 @@ const serverFunction = {
             const accountExists = await doorService.isAccountCanAccessDoor(ticket.idDoor, ticket.idAccount);
 
             if (ticket.isAccept && !accountExists) {
-                logger.info(`Add account ${ticket.idAccount} can access door ${ticket.idDoor} by server`);
                 await doorService.addAccountCanAccess(ticket.idDoor, ticket.idAccount);
             } else if (!ticket.isAccept && accountExists) {
-                logger.info(`Remove account ${ticket.idAccount} can access door ${ticket.idDoor} by server`);
                 await doorService.removeAccountCanAccess(ticket.idDoor, ticket.idAccount);
             }
         }

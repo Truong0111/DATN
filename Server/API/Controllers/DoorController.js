@@ -110,31 +110,42 @@ module.exports = {
 
     addAccountAccessDoor: async (req, res) => {
         const idDoor = req.body.idDoor;
-        const accounts = req.body.accounts;
+        const idAccounts = req.body.accounts;
         logger.info(`Request: Add accounts to access door ${idDoor} from ${req.ip}`);
-        const addSuccess = await doorService.addAccountsAccessDoor(idDoor, accounts);
-
+        const addSuccess = await ticketService.addAccountsAccessDoor(idDoor, idAccounts);
         if (addSuccess.success) {
             logger.info(`Response: Add accounts to access door successfully for ${req.ip}`);
-            res.status(200).json({message: "Add accounts to access door successful"});
+            res.status(200).json({
+                message: "Add accounts to access door successful",
+                failedAccounts: addSuccess.failedAccounts
+            });
         } else {
             logger.warn(`Response: Add accounts to access door failed from ${req.ip}`);
-            res.status(404).json({message: "Add accounts to access door failed"});
+            res.status(404).json({
+                message: "Add accounts to access door failed",
+                failedAccounts: addSuccess.failedAccounts
+            });
         }
     },
 
     removeAccountAccessDoor: async (req, res) => {
         const idDoor = req.body.idDoor;
-        const accounts = req.body.accounts;
+        const idAccounts = req.body.accounts;
         logger.info(`Request: Remove accounts access door ${idDoor} from ${req.ip}`);
-        const addSuccess = await doorService.removeAccountsAccessDoor(idDoor, accounts);
+        const addSuccess = await ticketService.removeAccountsAccessDoor(idDoor, idAccounts);
 
         if (addSuccess.success) {
             logger.info(`Response: Remove accounts to access door successfully for ${req.ip}`);
-            res.status(200).json({message: "Remove accounts to access door successful"});
+            res.status(200).json({
+                message: "Remove accounts to access door successful",
+                failedAccounts: addSuccess.failedAccounts
+            });
         } else {
             logger.warn(`Response: Remove accounts to access door failed from ${req.ip}`);
-            res.status(404).json({message: "Remove accounts to access door failed"});
+            res.status(404).json({
+                message: "Remove accounts to access door failed",
+                failedAccounts: addSuccess.failedAccounts
+            });
         }
     },
 

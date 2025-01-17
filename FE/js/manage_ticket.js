@@ -118,6 +118,13 @@ function renderTicketViewModal(ticket, door, account) {
             <strong>Reason:</strong> ${ticket.reason}
         </div>
     `;
+
+    const acceptButton = document.getElementById("acceptTicketBtn");
+    if (ticket.isAccept) {
+        acceptButton.classList.add("d-none");
+    } else {
+        acceptButton.classList.remove("d-none");
+    }
 }
 
 async function fetchAndUpdateTicketManager() {
@@ -213,7 +220,7 @@ async function submitTicket() {
     }
 }
 
-async function acceptTicket(){
+async function acceptTicket() {
     if (!confirm("Are you sure you want to accept this ticket?")) return;
 
     try {
@@ -224,7 +231,7 @@ async function acceptTicket(){
     }
 }
 
-async function rejectTicket(){
+async function rejectTicket() {
     if (!confirm("Are you sure you want to reject this ticket?")) return;
 
     try {
@@ -274,14 +281,8 @@ async function fetchTickets(idAccount) {
 async function fetchCreateTicketRequest(ticketData) {
     const token = getToken();
     const api = `${ref}/ticket/create`;
-    const response = await fetch(api, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(ticketData),
-    });
+
+    const response = await getResponseWithBody(api, "POST", token, body);
 
     if (!response.ok) {
         const errorData = await response.json();
@@ -293,12 +294,9 @@ async function fetchCreateTicketRequest(ticketData) {
 async function fetchTicketDetailsRequest(idTicket) {
     const token = getToken();
     const api = `${ref}/ticket/${idTicket}`;
-    const response = await fetch(api, {
-        method: "GET",
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
+
+    const response = await getResponse(api, "GET", token);
+
     if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message);

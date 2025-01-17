@@ -20,6 +20,8 @@ module.exports = {
     deleteTicket,
     deleteTicketRefIdAccount,
     deleteTicketRefIdDoor,
+    addAccountsAccessDoor,
+    removeAccountsAccessDoor
 };
 
 async function createTicket(ticketData) {
@@ -47,6 +49,7 @@ async function createTicket(ticketData) {
             reason: ticketData.reason,
             createdAt: new Date().toISOString(),
             isAccept: false,
+            createBy: "user"
         });
 
         logger.info(`Create new ticket ${idTicket} by account ${ticketData.idAccount}`);
@@ -164,7 +167,7 @@ async function getTicketsByIdDoor(idDoor) {
 async function getAllTickets() {
     try {
         const ticketsSnapshot = await ticketCollection.get();
-        if(util.isArrayEmptyOrNull(ticketsSnapshot)){
+        if (util.isArrayEmptyOrNull(ticketsSnapshot)) {
             return [];
         }
 
@@ -192,7 +195,7 @@ async function deleteTicketRefIdAccount(idAccount) {
             .where("idAccount", "==", idAccount)
             .get();
 
-        if(util.isArrayEmptyOrNull(ticketsSnapshot)){
+        if (util.isArrayEmptyOrNull(ticketsSnapshot)) {
             return false;
         }
 
@@ -212,7 +215,7 @@ async function deleteTicketRefIdDoor(idDoor) {
             .where("idDoor", "==", idDoor)
             .get();
 
-        if(util.isArrayEmptyOrNull(ticketsSnapshot)){
+        if (util.isArrayEmptyOrNull(ticketsSnapshot)) {
             logger.warn(`No ticket ref door ${idDoor}`);
             return false;
         }
@@ -232,8 +235,117 @@ async function deleteTicketRefIdDoor(idDoor) {
     }
 }
 
+async function addAccountsAccessDoor(idDoor, idAccounts) {
+    const failedAccounts = [];
+
+    try {
+        for (const idAccount of idAccounts) {
+            const failedAccount = await createAcceptTicket(idDoor, idAccount);
+            if (!failedAccount.success) failedAccounts.push(idAccount);
+        }
+        if (failedAccounts.length > 0) {
+            logger.warn(`Failed to add accepted tickets for accounts ${failedAccounts.join(", ")}`);
+            return {success: true, failedAccounts: failedAccounts}
+        } else if (failedAccounts.length === idAccounts.length) {
+            logger.warn(`Failed to add accepted tickets for all accounts can access door ${idDoor}`);
+            return {success: false, failedAccounts: failedAccounts}
+        } else {
+            logger.info(`Added accepted tickets for all accounts can access door ${idDoor}`);
+            return {success: true, failedAccounts: failedAccounts}
+        }
+    } catch (error) {
+        logger.error(`Error when add accounts can access door ${idDoor}`);
+        return {success: false, failedAccounts: failedAccounts};
+    }
+}
+
+async function removeAccountsAccessDoor(idDoor, idAccounts) {
+    const failedAccounts = [];
+
+    try {
+        for (const idAccount of idAccounts) {
+            const failedAccount = await removeAcceptTicket(idDoor, idAccount);
+            if (!failedAccount.success) failedAccounts.push(idAccount);
+        }
+
+        if (failedAccounts.length > 0) {
+            logger.warn(`Failed to remove accepted tickets for accounts ${failedAccounts.join(", ")}`);
+            return {success: true, failedAccounts: failedAccounts}
+        } else if (failedAccounts.length === idAccounts.length) {
+            logger.warn(`Failed to remove accepted tickets for all accounts can access door ${idDoor}`);
+            return {success: false, failedAccounts: failedAccounts}
+        } else {
+            logger.info(`Removed accepted tickets for all accounts can access door ${idDoor}`);
+            return {success: true, failedAccounts: failedAccounts}
+        }
+
+    } catch (error) {
+        logger.error(`Error when remove accounts can access door ${idDoor}`);
+        return {success: false, failedAccounts: failedAccounts};
+    }
+}
+
 function isTicketValid(startTime, endTime) {
     const timeStart = new Date(startTime);
     const timeEnd = new Date(endTime);
     return timeStart <= timeEnd;
+}
+
+async function createAcceptTicket(idDoor, idAccount) {
+    try {
+        const ticketRef = ticketCollection.doc();
+        const idTicket = ticketRef.id;
+
+        const currentDate = new Date();
+        const endTime = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+        const accountSnapshot = await accountCollection.doc(idAccount).get();
+
+        const doorSnapshot = await doorCollection.doc(idDoor).get();
+
+        await ticketRef.set({
+            fullName: accountSnapshot.data().firstName + " " + accountSnapshot.data().lastName,
+            positionDoor: doorSnapshot.data().position,
+            idTicket: idTicket,
+            idDoor: idDoor,
+            idAccount: idAccount,
+            startTime: currentDate.toISOString(),
+            endTime: endTime.toISOString(),
+            reason: `Access door by manager`,
+            createdAt: currentDate.toISOString(),
+            isAccept: true,
+            createBy: "manager"
+        });
+        logger.info(`Add account ${idAccount} can access door ${idDoor}`);
+        return {success: true};
+    } catch (error) {
+        logger.error(`Failed to add accepted ticket for account ${idAccount}`);
+        console.error(error);
+        return {success: false, error: error};
+    }
+}
+
+async function removeAcceptTicket(idDoor, idAccount) {
+    try {
+        const ticketRef = await ticketCollection
+            .where("idAccount", "==", idAccount)
+            .where("idDoor", "==", idDoor)
+            // .where("createBy", "array-contains-any", constantValue.roleToCheck)
+            .get();
+
+        if (ticketRef.empty) {
+            logger.warn(`No accepted ticket for account ${idAccount} and door ${idDoor}`);
+            return false;
+        }
+
+        const deletePromises = ticketRef.docs.map((doc) => doc.ref.delete());
+        await Promise.all(deletePromises);
+
+        logger.info(`Removed accepted ticket for account ${idAccount} and door ${idDoor}`);
+        return {success: true};
+    } catch (error) {
+        logger.error(`Failed to remove accepted ticket for account ${idAccount}: ${error.message}`);
+        console.error(error);
+        return {success: false, error: error};
+    }
 }
