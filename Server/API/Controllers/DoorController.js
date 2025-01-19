@@ -132,19 +132,39 @@ module.exports = {
         const idDoor = req.body.idDoor;
         const idAccounts = req.body.accounts;
         logger.info(`Request: Remove accounts access door ${idDoor} from ${req.ip}`);
-        const addSuccess = await ticketService.removeAccountsAccessDoor(idDoor, idAccounts);
 
-        if (addSuccess.success) {
-            logger.info(`Response: Remove accounts to access door successfully for ${req.ip}`);
-            res.status(200).json({
-                message: "Remove accounts to access door successful",
-                failedAccounts: addSuccess.failedAccounts
-            });
+        const removePermission = await doorService.removeAccountsAccessDoor(idDoor, idAccounts);
+        if (removePermission.success) {
+            if (removePermission.failedAccounts.length > 0) {
+
+            } else {
+                logger.info(`Remove accounts permission to access door successfully for ${req.ip}`);
+            }
+        } else {
+            logger.warn(`Remove accounts permission to access door failed for ${req.ip}`);
+        }
+
+
+        const removeSuccess = await ticketService.removeAccountsAccessDoor(idDoor, idAccounts);
+
+        if (removeSuccess.success) {
+            if (removeSuccess.failedAccounts.length > 0) {
+                res.status(200).json({
+                    message: "Remove failed for some accounts to access door",
+                    failedAccounts: removeSuccess.failedAccounts
+                });
+            } else {
+                logger.info(`Response: Remove accounts to access door successfully for ${req.ip}`);
+                res.status(200).json({
+                    message: "Remove accounts to access door successful",
+                    failedAccounts: removeSuccess.failedAccounts
+                });
+            }
         } else {
             logger.warn(`Response: Remove accounts to access door failed from ${req.ip}`);
             res.status(404).json({
                 message: "Remove accounts to access door failed",
-                failedAccounts: addSuccess.failedAccounts
+                failedAccounts: removeSuccess.failedAccounts
             });
         }
     },

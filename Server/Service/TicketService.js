@@ -330,7 +330,6 @@ async function removeAcceptTicket(idDoor, idAccount) {
         const ticketRef = await ticketCollection
             .where("idAccount", "==", idAccount)
             .where("idDoor", "==", idDoor)
-            // .where("createBy", "array-contains-any", constantValue.roleToCheck)
             .get();
 
         if (ticketRef.empty) {
